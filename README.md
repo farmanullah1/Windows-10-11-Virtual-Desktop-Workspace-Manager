@@ -3,7 +3,7 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
 [![Platform Windows](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011%20(64--bit)-0078d4.svg)](https://microsoft.com)
 [![License MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests Passing](https://img.shields.io/badge/tests-41%20passed-brightgreen.svg)](tests/)
+[![Tests Passing](https://img.shields.io/badge/tests-53%20passed-brightgreen.svg)](tests/)
 
 A production-quality utility for **Windows 10 and Windows 11** that manages Windows Virtual Desktops and organizes your applications into persistent, customized virtual workspaces. Applications are automatically launched or moved to designated virtual desktops with zero destructive behavior, failure isolation, and transparent observability.
 
@@ -67,6 +67,20 @@ A production-quality utility for **Windows 10 and Windows 11** that manages Wind
    ```cmd
    pip install -e .
    ```
+
+### 4.1 System Setup & Bootstrap Runner (`run.py`)
+
+For automated, idempotent environment initialization and shortcut setup, use the root-level setup runner:
+
+```cmd
+python run.py             # Perform complete idempotent setup
+python run.py --setup     # Explicit setup mode
+python run.py --check     # Non-destructive diagnostics (makes zero system changes)
+python run.py --repair    # Verify and repair application-owned shortcuts and folders
+python run.py --version   # Display setup runner version
+```
+
+> **Strict Guarantee (Section 83B):** `run.py` is exclusively a setup and bootstrap tool. It **never** executes the workspace, never launches configured applications, and never manipulates Windows Virtual Desktops.
 
 ---
 
@@ -318,7 +332,7 @@ Output executable will be in `dist/VirtualDesktopWorkspaceManager.exe`. See [doc
 
 ## 18. Automated Test Suite
 
-The application includes a comprehensive test suite of **41 unit, integration, and acceptance tests**:
+The application includes a comprehensive test suite of **53 unit, integration, acceptance, and setup tests**:
 
 ```cmd
 python -m pytest -v
@@ -329,8 +343,8 @@ python -m pytest -v
 * **100% Non-Destructive**: All tests execute using isolated mock providers (`MockVirtualDesktopProvider`, `MockProcessProvider`, `MockWindowProvider`, `MockApplicationLauncher`).
 * **Zero Real Processes**: No third-party tools, browsers, or editors are launched during testing.
 * **Zero Virtual Desktop Alterations**: Host virtual desktops are never touched or switched.
-* **Isolated Temporary Directories**: All configuration, logging, and shortcut tests use isolated temporary folders that are automatically cleaned up.
-* **Acceptance Coverage**: Tests all 8 desktop shortcut acceptance scenarios, window matching policies, single-instance mutex locks, configuration atomic writes, and crash recovery.
+* **Isolated Temporary Directories**: All configuration, logging, setup state, and shortcut tests use isolated temporary folders that are automatically cleaned up.
+* **Acceptance Coverage**: Tests all 8 desktop shortcut acceptance scenarios, window matching policies, single-instance mutex locks, configuration atomic writes, setup bootstrap idempotency, and crash recovery.
 
 ---
 
@@ -343,6 +357,9 @@ python -m pytest -v
 * [Windows API Compatibility & Fallbacks](docs/windows-api-compatibility.md)
 * [Safety Review & Invariants](docs/safety-review.md)
 * [Security Review & UIPI](docs/security-review.md)
+* [Setup Security Review](docs/setup-security-review.md)
+* [Known Windows Limitations](docs/limitations.md)
+* [Packaging & Standalone Guide](docs/packaging.md)
 * [Troubleshooting Guide](docs/troubleshooting.md)
 * [Final Engineering Review](docs/final-review.md)
 * [Requirements Traceability Matrix](docs/requirements-traceability.md)
