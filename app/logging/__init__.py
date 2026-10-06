@@ -2,6 +2,7 @@
 Logging package exports.
 """
 
+from app.logging.buffer_handler import BufferLogHandler
 from app.logging.logger import (
     setup_logging,
     get_logger,
@@ -9,7 +10,6 @@ from app.logging.logger import (
     get_default_log_dir,
     SUCCESS_LEVEL_NUM,
 )
-from app.logging.buffer_handler import BufferLogHandler
 
 __all__ = [
     "setup_logging",

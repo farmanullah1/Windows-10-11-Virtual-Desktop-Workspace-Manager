@@ -11,7 +11,7 @@ import glob
 import logging
 from pathlib import Path
 from typing import Optional, List
-from app.logging.buffer_handler import BufferLogHandler
+from .buffer_handler import BufferLogHandler
 
 # Define SUCCESS level between INFO (20) and WARNING (30)
 SUCCESS_LEVEL_NUM = 25

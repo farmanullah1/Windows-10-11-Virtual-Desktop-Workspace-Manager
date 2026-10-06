@@ -7,10 +7,14 @@ import sys
 import argparse
 from pathlib import Path
 
-# Ensure root package directory is in sys.path
-root_dir = Path(__file__).resolve().parent.parent
-if str(root_dir) not in sys.path:
-    sys.path.insert(0, str(root_dir))
+# Ensure root package directory is in sys.path and remove app/ to avoid shadowing stdlib logging
+script_dir = str(Path(__file__).resolve().parent)
+while script_dir in sys.path:
+    sys.path.remove(script_dir)
+
+root_dir = str(Path(__file__).resolve().parent.parent)
+if root_dir not in sys.path:
+    sys.path.insert(0, root_dir)
 
 from app.core.manager import WorkspaceManager
 from app.configuration.config_store import ConfigStore
@@ -120,8 +124,9 @@ def main():
         active_prof = manager.config.get_active_profile()
         logger.info("Executing Run Workspace entry point for profile: %s", active_prof.name)
 
-        # Check confirmation policy if prompt_before_launch is enabled and not headless
-        if config.general.prompt_before_launch and not args.no_prompt and not args.headless:
+        # Check confirmation policy if confirm_before_execution is enabled and not headless
+        should_confirm = getattr(config.general, "confirm_before_execution", True)
+        if should_confirm and not args.no_prompt and not args.headless:
             try:
                 import tkinter as tk
                 from tkinter import messagebox
