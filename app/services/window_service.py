@@ -31,66 +31,71 @@ class WindowService(IWindowProvider):
         if not WIN32_AVAILABLE:
             return False
 
-        if not win32gui.IsWindow(hwnd) or not win32gui.IsWindowVisible(hwnd):
+        try:
+            if not win32gui.IsWindow(hwnd) or not win32gui.IsWindowVisible(hwnd):
+                return False
+
+            # Exclude windows with empty titles or purely system classes
+            title = win32gui.GetWindowText(hwnd).strip()
+            if not title:
+                return False
+
+            # Check window rect (must not be 0x0)
+            rect = win32gui.GetWindowRect(hwnd)
+            width = rect[2] - rect[0]
+            height = rect[3] - rect[1]
+            if width <= 0 or height <= 0:
+                return False
+
+            # Check styles
+            style = win32gui.GetWindowLong(hwnd, win32con.GWL_STYLE)
+            ex_style = win32gui.GetWindowLong(hwnd, win32con.GWL_EXSTYLE)
+
+            # Ignore child windows
+            if style & win32con.WS_CHILD:
+                return False
+
+            # Ignore tool windows unless explicitly marked as app window
+            if (ex_style & win32con.WS_EX_TOOLWINDOW) and not (ex_style & win32con.WS_EX_APPWINDOW):
+                return False
+
+            # Ignore shell/system classes like Program Manager or Taskbar
+            class_name = win32gui.GetClassName(hwnd)
+            ignored_classes = {
+                "Progman", "Shell_TrayWnd", "Windows.UI.Core.CoreWindow",
+                "ApplicationFrameWindow", "NarratorHelperWindow"
+            }
+            if class_name in ignored_classes and not title:
+                return False
+
+            return True
+        except Exception:
             return False
-
-        # Exclude windows with empty titles or purely system classes
-        title = win32gui.GetWindowText(hwnd).strip()
-        if not title:
-            return False
-
-        # Check window rect (must not be 0x0)
-        rect = win32gui.GetWindowRect(hwnd)
-        width = rect[2] - rect[0]
-        height = rect[3] - rect[1]
-        if width <= 0 or height <= 0:
-            return False
-
-        # Check styles
-        style = win32gui.GetWindowLong(hwnd, win32con.GWL_STYLE)
-        ex_style = win32gui.GetWindowLong(hwnd, win32con.GWL_EXSTYLE)
-
-        # Ignore child windows
-        if style & win32con.WS_CHILD:
-            return False
-
-        # Ignore tool windows unless explicitly marked as app window
-        if (ex_style & win32con.WS_EX_TOOLWINDOW) and not (ex_style & win32con.WS_EX_APPWINDOW):
-            return False
-
-        # Ignore shell/system classes like Program Manager or Taskbar
-        class_name = win32gui.GetClassName(hwnd)
-        ignored_classes = {
-            "Progman", "Shell_TrayWnd", "Windows.UI.Core.CoreWindow",
-            "ApplicationFrameWindow", "NarratorHelperWindow"
-        }
-        # Note: ApplicationFrameWindow can host UWP, but if it has no child and no title we ignore
-        if class_name in ignored_classes and not title:
-            return False
-
-        return True
 
     def _build_window_info(self, hwnd: int) -> Optional[WindowInfo]:
-        if not self._is_usable_top_level_window(hwnd):
+        try:
+            if not self._is_usable_top_level_window(hwnd):
+                return None
+
+            title = win32gui.GetWindowText(hwnd)
+            _, pid = win32process.GetWindowThreadProcessId(hwnd)
+            class_name = win32gui.GetClassName(hwnd)
+            placement = win32gui.GetWindowPlacement(hwnd)
+            is_minimized = placement[1] == win32con.SW_SHOWMINIMIZED
+            is_maximized = placement[1] == win32con.SW_SHOWMAXIMIZED
+
+            return WindowInfo(
+                hwnd=hwnd,
+                title=title,
+                pid=pid,
+                executable="",
+                is_visible=True,
+                is_minimized=is_minimized,
+                is_maximized=is_maximized,
+                class_name=class_name
+            )
+        except Exception:
             return None
-
-        title = win32gui.GetWindowText(hwnd)
-        _, pid = win32process.GetWindowThreadProcessId(hwnd)
-        class_name = win32gui.GetClassName(hwnd)
-        placement = win32gui.GetWindowPlacement(hwnd)
-        is_minimized = placement[1] == win32con.SW_SHOWMINIMIZED
-        is_maximized = placement[1] == win32con.SW_SHOWMAXIMIZED
-
-        return WindowInfo(
-            hwnd=hwnd,
-            title=title,
-            pid=pid,
-            executable="",
-            is_visible=True,
-            is_minimized=is_minimized,
-            is_maximized=is_maximized,
-            class_name=class_name
-        )
 
     def get_window_info(self, hwnd: int) -> Optional[WindowInfo]:
         if not WIN32_AVAILABLE:
@@ -104,15 +109,18 @@ class WindowService(IWindowProvider):
         results: List[WindowInfo] = []
 
         def enum_callback(hwnd, _):
-            info = self._build_window_info(hwnd)
-            if info:
-                results.append(info)
+            try:
+                info = self._build_window_info(hwnd)
+                if info:
+                    results.append(info)
+            except Exception:
+                pass
             return True
 
         try:
             win32gui.EnumWindows(enum_callback, None)
         except Exception as ex:
-            self.logger.error(f"EnumWindows error: {ex}")
+            self.logger.debug(f"EnumWindows notice: {ex}")
 
         return results
 

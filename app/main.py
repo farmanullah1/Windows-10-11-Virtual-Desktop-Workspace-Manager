@@ -38,6 +38,12 @@ def parse_args():
 
 
 def main():
+    if sys.platform == "win32":
+        try:
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+
     args = parse_args()
 
     # Load configuration

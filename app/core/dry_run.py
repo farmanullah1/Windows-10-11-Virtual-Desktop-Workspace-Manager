@@ -57,7 +57,7 @@ class DryRunResult:
             if not apps:
                 lines.append("  (No applications configured for this desktop)")
             for a in apps:
-                icon = "✓" if a.is_running else ("⚠" if not a.is_installed else "○")
+                icon = "[RUNNING]" if a.is_running else ("[MISSING]" if not a.is_installed else "[STOPPED]")
                 lines.append(f"  {icon} {a.app_name}: {a.action_preview}")
 
         if self.warnings:
