@@ -16,7 +16,8 @@ class ConfirmationDialog(tk.Toplevel):
         self,
         parent: tk.Widget,
         operation_name: str = "Workspace Execution",
-        on_confirm: Optional[Callable[[], None]] = None
+        on_confirm: Optional[Callable[[], None]] = None,
+        on_cancel: Optional[Callable[[], None]] = None
     ):
         super().__init__(parent)
         self.title("Confirm Workspace Execution")
@@ -27,7 +28,9 @@ class ConfirmationDialog(tk.Toplevel):
 
         self.confirmed = False
         self.on_confirm = on_confirm
+        self.on_cancel = on_cancel
 
+        self.protocol("WM_DELETE_WINDOW", self._cancel)
         self._build_ui(operation_name)
 
     def _build_ui(self, operation_name: str) -> None:
@@ -54,11 +57,17 @@ class ConfirmationDialog(tk.Toplevel):
         btn_bar = ttk.Frame(container)
         btn_bar.pack(fill=tk.X, pady=(8, 0))
 
-        ttk.Button(btn_bar, text="Cancel", command=self.destroy).pack(side=tk.RIGHT, padx=4)
+        ttk.Button(btn_bar, text="Cancel", command=self._cancel).pack(side=tk.RIGHT, padx=4)
         ttk.Button(btn_bar, text="Run Workspace", style="Primary.TButton", command=self._confirm).pack(side=tk.RIGHT, padx=4)
+
+    def _cancel(self) -> None:
+        if self.on_cancel and not self.confirmed:
+            self.on_cancel()
+        self.destroy()
 
     def _confirm(self) -> None:
         self.confirmed = True
         self.destroy()
         if self.on_confirm:
             self.on_confirm()
+

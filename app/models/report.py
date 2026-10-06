@@ -45,6 +45,11 @@ class ExecutionReport:
     app_statuses: Dict[str, AppExecutionStatus] = field(default_factory=dict)
     cancelled: bool = False
 
+    @property
+    def success(self) -> bool:
+        """True if the operation completed without cancellation or fatal errors."""
+        return not self.cancelled and len(self.errors) == 0
+
     def finish(self) -> None:
         self.ended_at = time.time()
         self.duration_seconds = round(self.ended_at - self.started_at, 2)

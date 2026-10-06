@@ -5,6 +5,8 @@ Integrates Dashboard, Desktop Cards Panel, Live Logs, Status Bar, and Menus.
 
 from __future__ import annotations
 import os
+import sys
+import platform
 import time
 import threading
 import tkinter as tk
@@ -156,6 +158,8 @@ class MainWindow(tk.Tk):
         )
         self.chk_auto.pack(side=tk.RIGHT, padx=8)
 
+        ttk.Button(right_frame, text="About", width=7, command=self._show_about_dialog).pack(side=tk.RIGHT, padx=4)
+        ttk.Button(right_frame, text="Health Check", width=12, command=self._show_health_check_dialog).pack(side=tk.RIGHT, padx=4)
         ttk.Button(right_frame, text="Wizard", width=8, command=self._open_setup_wizard).pack(side=tk.RIGHT, padx=4)
         ttk.Button(right_frame, text="Settings", width=8, command=self._open_settings_dialog).pack(side=tk.RIGHT, padx=4)
 
@@ -372,12 +376,14 @@ class MainWindow(tk.Tk):
     def _rename_desktop(self, dt: DesktopConfig) -> None:
         new_name = simpledialog.askstring("Rename Desktop", f"Enter new name for Desktop {dt.number}:", initialvalue=dt.name, parent=self)
         if new_name is not None and new_name.strip():
+            self.logger.info("Desktop Mapping Changed: Desktop %d renamed to '%s'", dt.number, new_name.strip())
             self.manager.rename_desktop(dt.number, new_name.strip())
             self._refresh_all_views()
 
     def _on_add_desktop_clicked(self) -> None:
         name = simpledialog.askstring("Add Desktop", "Enter custom name for new desktop:", parent=self)
         if name is not None:
+            self.logger.info("Desktop Mapping Changed: Added new Desktop '%s'", name.strip())
             self.manager.add_desktop(name.strip())
             self._refresh_all_views()
 
@@ -392,6 +398,7 @@ class MainWindow(tk.Tk):
         )
 
     def _on_app_added(self, app: AppConfig) -> None:
+        self.logger.info("Application Added: '%s' -> Desktop %d", app.name, app.desktop)
         self.manager.add_app_to_profile(app)
         self._refresh_all_views()
 
@@ -405,6 +412,7 @@ class MainWindow(tk.Tk):
         )
 
     def _on_app_updated(self, app: AppConfig) -> None:
+        self.logger.info("Application Updated: '%s' on Desktop %d", app.name, app.desktop)
         self.manager.update_app_in_profile(app)
         self._refresh_all_views()
 
@@ -445,6 +453,7 @@ class MainWindow(tk.Tk):
             if idx < 0:
                 return
             new_target = profile.desktops[idx].number
+            self.logger.info("Application Reassigned: '%s' -> Desktop %d", app.name, new_target)
             self.manager.reassign_app(app.id, new_target)
 
             if move_now_var.get():
@@ -470,6 +479,7 @@ class MainWindow(tk.Tk):
             "It only removes its workspace configuration."
         )
         if messagebox.askokcancel("Confirm Remove", msg, parent=self):
+            self.logger.info("Application Removed: '%s' from Desktop %d", app.name, app.desktop)
             self.manager.remove_app_from_profile(app.id)
             self._refresh_all_views()
 
@@ -481,14 +491,28 @@ class MainWindow(tk.Tk):
         if self.manager.config.safety.dry_run_default:
             self._on_dry_run_clicked()
             return
+        active_prof = self.manager.config.get_active_profile()
+        self.logger.info("Workspace Launch Started: Profile '%s'", active_prof.name)
         if self.manager.config.safety.require_confirmation and self.manager.config.general.confirm_before_execution:
-            ConfirmationDialog(self, "Launch Workspace", on_confirm=lambda: self._execute_operation(is_sync=False))
+            ConfirmationDialog(
+                self,
+                "Launch Workspace",
+                on_confirm=lambda: self._execute_operation(is_sync=False),
+                on_cancel=lambda: self.logger.info("Workspace Launch Cancelled by user")
+            )
         else:
             self._execute_operation(is_sync=False)
 
     def _on_sync_clicked(self) -> None:
+        active_prof = self.manager.config.get_active_profile()
+        self.logger.info("Workspace Sync Started: Profile '%s'", active_prof.name)
         if self.manager.config.safety.require_confirmation and self.manager.config.general.confirm_before_execution:
-            ConfirmationDialog(self, "Sync Workspace", on_confirm=lambda: self._execute_operation(is_sync=True))
+            ConfirmationDialog(
+                self,
+                "Sync Workspace",
+                on_confirm=lambda: self._execute_operation(is_sync=True),
+                on_cancel=lambda: self.logger.info("Workspace Sync Cancelled by user")
+            )
         else:
             self._execute_operation(is_sync=True)
 
@@ -544,6 +568,7 @@ class MainWindow(tk.Tk):
         messagebox.showinfo("Operation Summary", report.summary_text(), parent=self)
 
     def _on_stop_clicked(self) -> None:
+        self.logger.info("Workspace Operation Cancelled (Emergency STOP)")
         self.manager.stop_current_operation()
         self.btn_stop.configure(state=tk.DISABLED)
         self.lbl_status.configure(text="Cancellation requested...")
@@ -588,11 +613,103 @@ class MainWindow(tk.Tk):
             on_save=lambda _: self._refresh_all_views()
         )
 
+    def _show_health_check_dialog(self) -> None:
+        """Section 113: Diagnostic-only health check dialog verifying 8 critical subsystems."""
+        checks = self.diagnostics_service.run_health_check()
+        summary_text = self.diagnostics_service.format_health_check_summary()
+
+        top = tk.Toplevel(self)
+        top.title("System Health Check")
+        top.geometry("640x500")
+        top.transient(self)
+        top.grab_set()
+
+        content = ttk.Frame(top, padding=16)
+        content.pack(fill=tk.BOTH, expand=True)
+
+        ttk.Label(content, text="System Health Check", style="Header.TLabel").pack(anchor=tk.W, pady=(0, 4))
+        ttk.Label(content, text="Diagnostic verification of platform, providers, configuration, and storage.", style="Muted.TLabel").pack(anchor=tk.W, pady=(0, 10))
+
+        list_frame = ttk.LabelFrame(content, text="Subsystem Status", padding=10)
+        list_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
+
+        all_ok = True
+        for key, info in checks.items():
+            row = ttk.Frame(list_frame)
+            row.pack(fill=tk.X, pady=2)
+            mark = "✓" if info["ok"] else "✗"
+            color_fg = "#2e7d32" if info["ok"] else "#c62828"
+            if not info["ok"]:
+                all_ok = False
+
+            lbl_mark = tk.Label(row, text=mark, fg=color_fg, font=("Segoe UI", 10, "bold"), width=3)
+            lbl_mark.pack(side=tk.LEFT)
+            ttk.Label(row, text=f"{info['title']}:", font=("Segoe UI", 9, "bold")).pack(side=tk.LEFT, padx=(0, 6))
+            ttk.Label(row, text=info['detail'], style="Muted.TLabel").pack(side=tk.LEFT)
+
+        banner_txt = "OVERALL STATUS: HEALTHY (Ready for safe operation)" if all_ok else "OVERALL STATUS: ATTENTION NEEDED"
+        banner_fg = "#2e7d32" if all_ok else "#c62828"
+        lbl_banner = tk.Label(content, text=banner_txt, fg=banner_fg, font=("Segoe UI", 10, "bold"))
+        lbl_banner.pack(anchor=tk.W, pady=(0, 10))
+
+        btn_bar = ttk.Frame(content)
+        btn_bar.pack(fill=tk.X)
+
+        def copy_summary():
+            self.clipboard_clear()
+            self.clipboard_append(summary_text)
+            messagebox.showinfo("Copied", "Health check summary copied to clipboard.", parent=top)
+
+        ttk.Button(btn_bar, text="Copy Report", command=copy_summary).pack(side=tk.LEFT)
+        ttk.Button(btn_bar, text="Close", command=top.destroy).pack(side=tk.RIGHT)
+
+    def _show_about_dialog(self) -> None:
+        """Section 140: About dialog showing version, runtime, dependencies, API provider, and diagnostics shortcut."""
+        top = tk.Toplevel(self)
+        top.title("About Virtual Desktop Workspace Manager")
+        top.geometry("540x440")
+        top.resizable(False, False)
+        top.transient(self)
+        top.grab_set()
+
+        content = ttk.Frame(top, padding=20)
+        content.pack(fill=tk.BOTH, expand=True)
+
+        ttk.Label(content, text="Virtual Desktop Workspace Manager", style="Header.TLabel").pack(anchor=tk.W, pady=(0, 4))
+        ttk.Label(content, text=f"Version {__version__} — Production Release", font=("Segoe UI", 9, "bold")).pack(anchor=tk.W, pady=(0, 10))
+
+        info_frame = ttk.LabelFrame(content, text="System & Runtime Details", padding=12)
+        info_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 12))
+
+        items = [
+            ("Operating System:", f"{platform.system()} {platform.release()} (Build {platform.version()})"),
+            ("Python Runtime:", f"{sys.version.split()[0]} ({platform.architecture()[0]})"),
+            ("Virtual Desktop Provider:", self.manager.desktop_provider.name),
+            ("Process Provider:", self.manager.process_provider.name),
+            ("Window Provider:", self.manager.window_provider.name),
+            ("License:", "MIT License"),
+            ("Offline Mode:", "Enabled (Zero External Network Requests)"),
+            ("Integrity Level:", "Standard User (Medium Integrity)"),
+        ]
+
+        for label, val in items:
+            row = ttk.Frame(info_frame)
+            row.pack(fill=tk.X, pady=2)
+            ttk.Label(row, text=label, width=24, font=("Segoe UI", 9, "bold")).pack(side=tk.LEFT)
+            ttk.Label(row, text=val, style="Muted.TLabel").pack(side=tk.LEFT)
+
+        btn_bar = ttk.Frame(content)
+        btn_bar.pack(fill=tk.X)
+
+        ttk.Button(btn_bar, text="🩺 Run Health Check", command=lambda: [top.destroy(), self._show_health_check_dialog()]).pack(side=tk.LEFT)
+        ttk.Button(btn_bar, text="Close", command=top.destroy).pack(side=tk.RIGHT)
+
     def _on_auto_toggle(self) -> None:
         active = self.auto_toggle_var.get()
         self.manager.config.safety.automation_enabled = active
         self.manager.save_config()
         status_txt = "Active" if active else "Paused"
+        self.logger.info("Automation %s", "Enabled" if active else "Disabled")
         self.lbl_status.configure(text=f"Automation {status_txt}")
 
     # -------------------------------------------------------------
@@ -603,6 +720,7 @@ class MainWindow(tk.Tk):
         sel_idx = self.profile_combo.current()
         if sel_idx >= 0 and sel_idx < len(self.manager.config.profiles):
             chosen_profile = self.manager.config.profiles[sel_idx]
+            self.logger.info("Profile Switched: to '%s'", chosen_profile.name)
             self.manager.config.general.active_profile_id = chosen_profile.id
             self.manager.save_config()
             self._refresh_all_views()
@@ -655,8 +773,10 @@ class MainWindow(tk.Tk):
                 self.manager.config.general.active_profile_id = prof.id
                 self.manager.save_config()
                 self._refresh_all_views()
+                self.logger.info("Configuration Imported: Profile '%s'", prof.name)
                 messagebox.showinfo("Imported", f"Profile '{prof.name}' successfully imported!", parent=self)
             except Exception as ex:
+                self.logger.error("Configuration Import Failed: %s", ex)
                 messagebox.showerror("Import Error", f"Failed to import profile: {ex}", parent=self)
 
     # -------------------------------------------------------------

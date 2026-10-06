@@ -38,3 +38,36 @@ def test_diagnostics_report_generation():
     assert "VIRTUAL DESKTOP WORKSPACE MANAGER — DIAGNOSTIC REPORT" in report
     assert "VIRTUAL DESKTOP SUBSYSTEM" in report
     assert "ACTIVE WORKSPACE PROFILE" in report
+
+
+def test_health_check_execution_and_summary():
+    """Section 113: Verify all 8 health check items and summary format."""
+    config = WorkspaceConfig()
+    dp = MockVirtualDesktopProvider()
+    pp = MockProcessProvider()
+    wp = MockWindowProvider()
+
+    diag = DiagnosticsService(config, dp, pp, wp)
+    checks = diag.run_health_check()
+
+    assert len(checks) == 8
+    expected_keys = [
+        "windows_supported",
+        "virtual_desktop_provider_available",
+        "configuration_valid",
+        "desktop_mappings_valid",
+        "applications_detected",
+        "permissions_sufficient",
+        "configuration_writable",
+        "logging_writable",
+    ]
+    for key in expected_keys:
+        assert key in checks
+        assert "title" in checks[key]
+        assert "ok" in checks[key]
+        assert "detail" in checks[key]
+
+    summary = diag.format_health_check_summary()
+    assert "VIRTUAL DESKTOP WORKSPACE MANAGER — HEALTH CHECK" in summary
+    assert "OVERALL STATUS:" in summary
+

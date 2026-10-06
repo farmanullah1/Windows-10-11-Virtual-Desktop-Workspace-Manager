@@ -14,8 +14,10 @@ if str(root_dir) not in sys.path:
 
 from app.core.manager import WorkspaceManager
 from app.configuration.config_store import ConfigStore
+from app.configuration.validator import ConfigValidator
 from app.logging.logger import setup_logging, get_logger
 from app.services.shortcut_service import ShortcutService
+from app.services.single_instance import SingleInstanceGuard
 from app.ui.app_window import MainWindow
 
 
@@ -88,6 +90,14 @@ def main():
 
     # 5. Dedicated "Run Workspace" entry point (--run)
     if args.run:
+        # Validate configuration before execution (Section 148A Test 5)
+        try:
+            ConfigValidator.validate(manager.config)
+        except Exception as val_err:
+            logger.error("Configuration validation failed before workspace execution: %s", val_err)
+            print(f"Error: Invalid configuration - {val_err}")
+            sys.exit(1)
+
         active_prof = manager.config.get_active_profile()
         logger.info("Executing Run Workspace entry point for profile: %s", active_prof.name)
 
@@ -121,11 +131,21 @@ def main():
         logger.info("Executing workspace autolaunch as configured in startup settings.")
         manager.launch_workspace()
 
-    # 7. Default / --config: Launch Configuration GUI
-    app = MainWindow(manager, start_minimized=args.minimized)
-    app.mainloop()
+    # 7. Default / --config: Launch Configuration GUI with Single-Instance enforcement
+    guard = SingleInstanceGuard()
+    if not guard.acquire():
+        logger.warning("Virtual Desktop Workspace Manager is already running.")
+        print("Virtual Desktop Workspace Manager is already running.")
+        sys.exit(0)
+
+    try:
+        app = MainWindow(manager, start_minimized=args.minimized)
+        app.mainloop()
+    finally:
+        guard.release()
 
 
 if __name__ == "__main__":
     main()
+
 

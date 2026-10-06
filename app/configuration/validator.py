@@ -124,3 +124,10 @@ class ConfigValidator:
             )
 
         return errors, warnings
+
+    @classmethod
+    def validate(cls, config: WorkspaceConfig) -> None:
+        """Validates configuration and raises ConfigValidationError if fatal errors are found."""
+        errors, _ = cls.validate_config(config)
+        if errors:
+            raise ConfigValidationError("; ".join(errors))
