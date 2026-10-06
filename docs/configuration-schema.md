@@ -1,6 +1,7 @@
 # Workspace Configuration Schema Reference
 
 The configuration file is stored persistently at:
+
 ```text
 %APPDATA%\VirtualDesktopWorkspaceManager\workspace.json
 ```
@@ -79,8 +80,9 @@ The configuration file is stored persistently at:
 ## 2. Field Definitions
 
 ### Root Level
+
 | Field | Type | Description |
-|---|---|---|
+| --- | --- | --- |
 | `schema_version` | integer | Incremental configuration schema version (current: `1`). |
 | `profiles` | array[WorkspaceProfile] | Array of workspace profile objects. |
 | `general` | GeneralSettings | Application-level UI and startup settings. |
@@ -91,8 +93,9 @@ The configuration file is stored persistently at:
 ---
 
 ### WorkspaceProfile
+
 | Field | Type | Description |
-|---|---|---|
+| --- | --- | --- |
 | `id` | string | Unique identifier for the profile. |
 | `name` | string | Human-readable profile label (e.g. "Development", "Work"). |
 | `description` | string | Optional description of profile purpose. |
@@ -102,8 +105,9 @@ The configuration file is stored persistently at:
 ---
 
 ### DesktopConfig
+
 | Field | Type | Description |
-|---|---|---|
+| --- | --- | --- |
 | `number` | integer | 1-indexed desktop position. |
 | `name` | string | Custom label (e.g. "Browser", "Development", "Database"). |
 | `desktop_id` | string / null | Optional Windows internal virtual desktop GUID string. |
@@ -111,8 +115,9 @@ The configuration file is stored persistently at:
 ---
 
 ### AppConfig
+
 | Field | Type | Description |
-|---|---|---|
+| --- | --- | --- |
 | `id` | string | Unique stable application identifier. |
 | `name` | string | Display name of the application. |
 | `executable` | string | Absolute path or path with environment variables (e.g. `%LocalAppData%`). |
@@ -120,7 +125,7 @@ The configuration file is stored persistently at:
 | `desktop` | integer | Target virtual desktop number (1-indexed). |
 | `enabled` | boolean | Whether the application participates in workspace launch/sync. |
 | `launch_mode` | string | One of: `"launch_if_missing"`, `"always_launch"`, `"reuse_only"`. |
-| `move_existing_window`| boolean | Whether running windows are moved to the target desktop. |
+| `move_existing_window` | boolean | Whether running windows are moved to the target desktop. |
 | `window_policy` | string | One of: `"main"`, `"all"`, `"title_contains"`, `"title_regex"`. |
 | `title_pattern` | string | Text substring or regex pattern used when policy matches by title. |
 | `launch_delay_ms` | integer | Milliseconds to pause after launching this app before the next. |
@@ -132,4 +137,5 @@ The configuration file is stored persistently at:
 ## 3. Schema Migrations
 
 The `ConfigMigration` service verifies and upgrades configurations on load:
+
 * **v0 -> v1**: Legacy configurations with a top-level `apps` list and boolean `launchIfMissing` flags are automatically nested into a default `WorkspaceProfile` with modernized enum properties (`launch_mode`).

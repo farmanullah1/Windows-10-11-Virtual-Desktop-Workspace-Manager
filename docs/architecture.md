@@ -4,7 +4,7 @@
 
 The **Windows Virtual Desktop Workspace Manager** is a production-grade utility designed for Windows 10 and Windows 11 (64-bit). It orchestrates Windows Virtual Desktops and organizes user applications across dedicated virtual spaces with zero destructive behavior, persistent configuration, failure isolation, and transparent observability.
 
-```
+```text
 ┌────────────────────────────────────────────────────────────────────────┐
 │                        User Interface Layer                            │
 │  MainWindow (Tkinter / TTK with Windows 11 Modern Theme)               │
@@ -63,6 +63,7 @@ The **Windows Virtual Desktop Workspace Manager** is a production-grade utility 
 ## 2. Component Breakdown
 
 ### 2.1 Domain Models (`app/models/`)
+
 * **`AppConfig`**: Encapsulates unique application IDs, names, executable paths with environment variable expansion, target desktop assignments, launch modes (`LAUNCH_IF_MISSING`, `ALWAYS_LAUNCH`, `REUSE_ONLY`), window policies (`MAIN_ONLY`, `ALL_MATCHING`, `TITLE_CONTAINS`, `TITLE_REGEX`), and bounded execution timeouts.
 * **`DesktopConfig`**: Defines virtual desktop indices, friendly labels, and internal GUID references.
 * **`WorkspaceProfile`**: Groups virtual desktop definitions and app configurations under isolated profile containers (e.g., Development, Work, Database).
@@ -70,6 +71,7 @@ The **Windows Virtual Desktop Workspace Manager** is a production-grade utility 
 * **`ExecutionReport`**: Immutable summary of an execution run, tracking desktops created, apps launched/reused, windows moved, warnings, errors, and precise run duration.
 
 ### 2.2 Providers & Abstraction Layer (`app/providers/`)
+
 * **`IVirtualDesktopProvider`**: Abstract interface for desktop enumeration, creation, switching, window assignment, and verification.
   * **`WindowsVdaProvider`**: Production provider integrating with Windows 10/11 COM interfaces through `pyvda`.
   * **`OfficialComDesktopManager`**: Microsoft official COM `IVirtualDesktopManager` wrapper for direct verification and secondary desktop assignment.
@@ -80,6 +82,7 @@ The **Windows Virtual Desktop Workspace Manager** is a production-grade utility 
 * **`IApplicationLauncher`**: Spawns application executables safely using `subprocess.Popen` without shell interpretation.
 
 ### 2.3 Application Discovery (`app/discovery/`)
+
 * Implements the strict **7-Layer Resolution Strategy**:
   1. User-configured executable path.
   2. Currently running matching processes.
@@ -90,6 +93,7 @@ The **Windows Virtual Desktop Workspace Manager** is a production-grade utility 
   7. Controlled directory scans for versioned applications (e.g. `%LocalAppData%\Postman\app-*\Postman.exe` or SSMS 18–22).
 
 ### 2.4 Core Execution Engine (`app/core/`)
+
 * **`WorkspaceExecutionPlan`**: Executes a 7-stage sequence:
   * **Phase 1: Detect Desktops** — Enumerate available virtual desktops.
   * **Phase 2: Prepare Desktops** — Create only missing desktops up to target; never delete existing user desktops.
@@ -102,6 +106,7 @@ The **Windows Virtual Desktop Workspace Manager** is a production-grade utility 
 * **`DryRunInspector`**: Generates pre-flight previews without mutating desktop or process state.
 
 ### 2.5 Persistence & Observability (`app/configuration/`, `app/logging/`)
+
 * **Atomic Writes**: Writes changes to temporary files before replacing `workspace.json`.
 * **Backups**: Automatically preserves `workspace.backup.json` and retains up to 5 historical timestamped snapshots.
 * **Logging**: Structured logs with `INFO`, `SUCCESS`, `WARNING`, `ERROR`, `DEBUG` levels, daily log rotation, and thread-safe UI ring buffering.

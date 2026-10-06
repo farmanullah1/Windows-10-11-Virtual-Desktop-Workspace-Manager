@@ -25,6 +25,7 @@ The **Windows Virtual Desktop Workspace Manager** operates under a strict princi
 ## 4. Filesystem Boundaries
 
 * **Restricted Application State**: All runtime state, logs, markers, and configurations are stored strictly within the user's roaming application data folder:
+
   ```text
   %APPDATA%\VirtualDesktopWorkspaceManager\
   ├── workspace.json
@@ -32,6 +33,7 @@ The **Windows Virtual Desktop Workspace Manager** operates under a strict princi
   ├── backups\
   └── logs\
   ```
+
 * **No Unsolicited File Deletion**: The manager never deletes files outside of its own configured log retention cleanup (`workspace_YYYYMMDD.log` older than the user-configured retention limit).
 * **Developer Data Immunity**: The manager never touches source code, git repositories, browser profile caches, Docker data volumes, or database files.
 
@@ -56,7 +58,7 @@ The **Windows Virtual Desktop Workspace Manager** operates under a strict princi
 ## 7. Safety Threat Model & Mitigations
 
 | Threat | Impact | Mitigation Strategy |
-|---|---|---|
+| --- | --- | --- |
 | Command Injection | Arbitrary command execution via configured arguments | Safe tokenized argument passing; `shell=True` prohibited; validation warnings on shell syntax |
 | Configuration Corruption | Loss of user workspace settings on sudden crash | Atomic file writes via temporary files and `shutil.move`; automatic backup preservation |
 | Runaway Process Spawning | System resource exhaustion from duplicate launches | Process and window pre-detection; reusable instance policies; configurable launch delays |

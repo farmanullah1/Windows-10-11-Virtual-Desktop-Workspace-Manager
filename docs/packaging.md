@@ -8,6 +8,7 @@ This document describes how to package **Windows Virtual Desktop Workspace Manag
 
 1. **Python 3.10+ (64-bit)** installed on Windows.
 2. Install project dependencies and PyInstaller:
+
    ```cmd
    pip install -r requirements.txt
    pip install pyinstaller
@@ -24,6 +25,7 @@ pyinstaller --noconsole --onefile --name "VirtualDesktopWorkspaceManager" --add-
 ```
 
 ### Build Parameters Explained
+
 * `--noconsole`: Hides the command-prompt window so the application runs as a clean desktop GUI.
 * `--onefile`: Bundles the Python runtime, dependencies (`pyvda`, `pywin32`, `psutil`, `pystray`), and assets into a single `.exe` file.
 * `--name`: Sets the output binary name in the `dist/` directory (`dist/VirtualDesktopWorkspaceManager.exe`).
@@ -40,6 +42,7 @@ python main.py
 ```
 
 ### Available CLI Flags
+
 * `python main.py --dry-run` — Runs pre-flight dry run preview in the console without opening GUI.
 * `python main.py --sync` — Reconciles window positions non-interactively and exits.
 * `python main.py --minimized` — Starts the GUI minimized to the system tray.

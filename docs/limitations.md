@@ -7,6 +7,7 @@ This document details known technical limitations of the Windows Virtual Desktop
 ## 1. Documented vs Undocumented Windows APIs
 
 ### Official Microsoft API (`IVirtualDesktopManager`)
+
 * **Available Methods**:
   * `IsWindowOnCurrentVirtualDesktop(HWND, BOOL*)`
   * `GetWindowDesktopId(HWND, GUID*)`
@@ -18,6 +19,7 @@ This document details known technical limitations of the Windows Virtual Desktop
   * Reorder or rename virtual desktops.
 
 ### Internal Windows COM Interfaces (`IVirtualDesktopManagerInternal`)
+
 * Used by tools including `pyvda`, `VirtualDesktop11`, and `PSVirtualDesktop`.
 * **Limitation**: Because these interfaces are not publicly documented by Microsoft, their vtable offsets and GUIDs can change between major Windows builds (such as Windows 10 1909 vs 21H2, or Windows 11 21H2 vs 24H2/26xxx).
 * **Mitigation**:
