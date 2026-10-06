@@ -6,6 +6,7 @@ Interacts with Windows 10/11 Virtual Desktop COM interfaces.
 from __future__ import annotations
 from typing import List, Optional
 from app.providers.base import IVirtualDesktopProvider, DesktopInfo
+from app.providers.official_com_provider import OfficialComDesktopManager
 from app.logging.logger import get_logger
 
 try:
@@ -22,6 +23,7 @@ class WindowsVdaProvider(IVirtualDesktopProvider):
     def __init__(self):
         self.logger = get_logger()
         self._available = PYVDA_AVAILABLE
+        self.official_com = OfficialComDesktopManager()
 
     def is_available(self) -> bool:
         if not self._available:
@@ -96,11 +98,21 @@ class WindowsVdaProvider(IVirtualDesktopProvider):
         if not self.is_available():
             return False
         try:
-            app_view = AppView(hwnd)
             target_vd = VirtualDesktop(desktop_number)
-            app_view.move(target_vd)
-            self.logger.info(f"Moved HWND {hwnd} to Desktop {desktop_number}")
-            return True
+            try:
+                app_view = AppView(hwnd)
+                app_view.move(target_vd)
+                self.logger.info(f"Moved HWND {hwnd} to Desktop {desktop_number}")
+                return True
+            except Exception as vda_ex:
+                # Fallback to official IVirtualDesktopManager COM by GUID
+                target_id = getattr(target_vd, "id", None)
+                if self.official_com and self.official_com.is_available() and target_id:
+                    self.logger.debug(f"pyvda AppView move failed ({vda_ex}), attempting official IVirtualDesktopManager fallback.")
+                    if self.official_com.move_window_to_desktop_guid(hwnd, str(target_id)):
+                        self.logger.info(f"Moved HWND {hwnd} to Desktop {desktop_number} via official IVirtualDesktopManager.")
+                        return True
+                raise vda_ex
         except Exception as ex:
             self.logger.error(f"Failed to move HWND {hwnd} to Desktop {desktop_number}: {ex}")
             return False
