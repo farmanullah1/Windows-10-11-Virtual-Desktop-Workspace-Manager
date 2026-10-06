@@ -1876,7 +1876,9 @@ Do not add unrelated "cleanup" features.
 
 # 57. NETWORK SAFETY
 
-Version 1 should have no network requirement.
+Version 1 must have **no network requirement during normal application runtime**.
+
+Setup may require network access only when `run.py` explicitly installs declared Python dependencies from the approved package source.
 
 Do not add:
 
@@ -1888,6 +1890,17 @@ Do not add:
 * update downloads
 
 unless explicitly requested later.
+
+The running application must not contact the network merely to:
+
+* open the GUI
+* load configuration
+* inspect local processes/windows
+* manage supported Virtual Desktop operations
+* write logs
+* run diagnostics
+
+If dependencies are already available locally, setup should be able to proceed without unnecessary network access.
 
 If the application has zero network requirement, document:
 
@@ -2497,7 +2510,11 @@ Never:
 
 # 83. INSTALLATION
 
-Provide a development mode and optional packaged mode.
+Provide a development/source mode and optional packaged mode.
+
+The project MUST include the root-level `run.py` setup/bootstrap entry point defined in Sections 83B–83L.
+
+Installation/setup and workspace execution are separate operations.
 
 If Python is used, consider a reputable packaging method such as PyInstaller only after the application works correctly.
 
@@ -2510,6 +2527,12 @@ The packaged application must:
 * preserve logs
 * preserve user configuration
 * not automatically launch the workspace
+* preserve the `--config`, `--run`, `--dry-run`, `--diagnostics`, `--version`, and `--help` command contract
+* remain separate from the `run.py` setup/bootstrap responsibility
+
+The source-mode setup path must be fully documented and must use `run.py`.
+
+Do not make `run.py` a hidden alias for `main.py --run`.
 
 ---
 
@@ -2654,6 +2677,680 @@ Explicit workspace execution
 
 Do not make the Configure shortcut secretly execute the Run behavior.
 Do not make the Run shortcut silently open the full configuration editor unless configuration is invalid and user intervention is required.
+
+
+---
+
+# 83B. `run.py` — EXPLICIT SYSTEM SETUP / BOOTSTRAP ENTRY POINT
+
+The project MUST include a root-level:
+
+```text
+run.py
+```
+
+This file is the **setup/bootstrap entry point** for the source-code version of the application.
+
+It is NOT the workspace execution entry point.
+
+Its purpose is to make the project usable on a Windows 10/11 machine by performing the required setup in an idempotent, safe, user-visible way.
+
+## Critical distinction
+
+The project has three different concepts:
+
+```text
+run.py
+    ↓
+SETUP / REPAIR ONLY
+
+main application --config
+    ↓
+CONFIGURATION GUI ONLY
+
+main application --run
+    ↓
+EXPLICIT WORKSPACE EXECUTION
+```
+
+Never combine these responsibilities.
+
+`run.py` must NEVER interpret its normal setup operation as permission to launch the workspace.
+
+## `run.py` responsibilities
+
+When the user explicitly runs:
+
+```text
+py run.py
+```
+
+or:
+
+```text
+python run.py
+```
+
+the script should perform the complete local setup required for the source-code application.
+
+At minimum it should:
+
+1. Verify that the host is Windows 10 or Windows 11.
+2. Detect architecture.
+3. Detect the installed Python version.
+4. Verify that the selected Python version is compatible with the project dependencies.
+5. Check whether the project directory is valid.
+6. Create a project-local virtual environment when appropriate.
+7. Install only the declared, pinned application dependencies required by the project.
+8. Verify that required dependencies import successfully.
+9. Create the user-level application/configuration directories.
+10. Create initial configuration files only if they do not already exist.
+11. Validate any existing configuration without overwriting it.
+12. Create required local directories such as:
+    * config
+    * backups
+    * logs
+    * diagnostics
+    * state
+    * cache
+13. Verify that the application entry point exists.
+14. Verify that the application icon/assets required for shortcuts exist.
+15. Create or repair the two application-owned Desktop shortcuts:
+    * `Virtual Desktop Workspace Manager — Configure`
+    * `Virtual Desktop Workspace Manager — Run Workspace`
+16. Verify the shortcut targets and arguments.
+17. Report exactly what was created, changed, skipped, or already present.
+18. Return a meaningful exit code.
+
+## `run.py` MUST NOT do these things during setup
+
+`run.py` must NOT:
+
+* launch the GUI
+* launch the workspace
+* launch Brave
+* launch Google Antigravity
+* launch SSMS
+* launch Postman
+* launch Docker
+* launch Visual Studio
+* launch VS Code
+* launch Git Bash
+* create Windows Virtual Desktops
+* switch the user's current Virtual Desktop
+* move application windows
+* terminate processes
+* uninstall applications
+* modify application data
+* modify development projects
+* enable startup automation
+* create scheduled tasks
+* create Windows services
+* modify security policies
+* disable UAC
+* disable Defender
+* disable SmartScreen
+* modify firewall settings
+* modify unrelated registry settings
+* delete user files
+* delete unrelated Desktop shortcuts
+
+Setup is installation/configuration work, not workspace execution.
+
+## Explicit setup modes
+
+Implement a structured CLI for `run.py`.
+
+At minimum:
+
+```text
+py run.py
+py run.py --setup
+py run.py --repair
+py run.py --check
+py run.py --help
+py run.py --version
+```
+
+Recommended semantics:
+
+```text
+py run.py
+    → perform normal idempotent setup
+
+py run.py --setup
+    → same as normal setup
+
+py run.py --repair
+    → verify and repair only application-owned setup artifacts
+
+py run.py --check
+    → diagnostics/validation only; do not change the system
+
+py run.py --help
+    → show supported setup commands
+
+py run.py --version
+    → show setup/bootstrap version
+```
+
+Do NOT add an ambiguous:
+
+```text
+py run.py --run
+```
+
+unless there is a compelling architectural reason.
+
+If such a mode is ever added, it MUST NOT be the default and MUST use the same explicit authorization boundary as the application's `--run` entry point.
+
+## Setup confirmation
+
+The normal setup command may perform the following explicitly requested setup actions:
+
+```text
+Create virtual environment
+Install declared dependencies
+Create application configuration directory
+Create application-owned shortcuts
+Create application-owned support directories
+```
+
+Before making system changes, show a concise setup plan when practical:
+
+```text
+Setup Plan
+
+Python:
+    C:\...\python.exe
+
+Virtual environment:
+    .venv\
+
+Application configuration:
+    %APPDATA%\VirtualDesktopWorkspaceManager\
+
+Shortcuts:
+    Configure
+    Run Workspace
+
+No applications will be launched.
+No Virtual Desktops will be modified.
+No application windows will be moved.
+```
+
+If the setup action is safe and explicitly invoked by the user, it may continue after displaying the plan.
+
+Do not ask for Administrator permission unless a specific setup operation genuinely requires it.
+
+## Idempotency
+
+Running:
+
+```text
+py run.py
+py run.py
+py run.py --repair
+```
+
+must not create duplicate:
+
+* virtual environments
+* configuration files
+* shortcuts
+* startup entries
+* application registrations
+
+The setup process must detect existing valid state and reuse it.
+
+Example:
+
+```text
+✓ Python compatible
+✓ Virtual environment already exists
+✓ Dependencies already satisfied
+✓ Configuration directory already exists
+✓ Configure shortcut already correct
+✓ Run Workspace shortcut already correct
+
+Setup complete. No unnecessary changes were made.
+```
+
+## Dependency installation
+
+Dependencies must be declared in a dependency file rather than hidden inside `run.py`.
+
+Preferred structure:
+
+```text
+requirements/
+    requirements.in
+    requirements.txt
+```
+
+or an equivalent documented dependency-management strategy.
+
+The resolved dependency file should pin versions for reproducible setup.
+
+`run.py` may invoke Python's package installer for declared dependencies when the user explicitly runs setup.
+
+Do not dynamically install arbitrary packages based on untrusted configuration.
+
+Do not execute package names or installation commands supplied by workspace configuration.
+
+If dependency installation requires internet access:
+
+* clearly state that setup-time internet access is required;
+* do not make the runtime application depend on internet access;
+* do not download arbitrary scripts;
+* install only declared dependencies from the approved package source;
+* report installation failures clearly.
+
+Runtime operation must remain offline-first.
+
+## Virtual environment policy
+
+Prefer a project-local environment:
+
+```text
+.venv\
+```
+
+Do not modify the user's global Python environment unless explicitly required and documented.
+
+Do not uninstall unrelated Python packages.
+
+Do not modify unrelated virtual environments.
+
+If an existing `.venv` is invalid:
+
+1. explain why;
+2. preserve relevant diagnostic information where practical;
+3. ask before destructive replacement;
+4. never delete arbitrary environments automatically.
+
+## Setup state
+
+Maintain a small setup-state record, separate from workspace configuration, for example:
+
+```text
+%APPDATA%\VirtualDesktopWorkspaceManager\state\setup.json
+```
+
+It may record:
+
+```json
+{
+  "setupSchemaVersion": 1,
+  "applicationVersion": "1.0.0",
+  "pythonVersion": "...",
+  "architecture": "64-bit",
+  "environmentPath": "...",
+  "shortcutVersion": 1,
+  "lastSetupTime": "...",
+  "setupStatus": "complete"
+}
+```
+
+Do not store secrets in setup state.
+
+The setup-state file must not become a second source of truth for workspace assignments.
+
+## Setup failure behavior
+
+If setup fails:
+
+* do not launch the application;
+* do not execute the workspace;
+* do not leave the user with a misleading "setup complete" message;
+* preserve valid existing configuration;
+* report the failed step;
+* provide a safe recovery path;
+* return a non-zero exit code.
+
+Where possible, setup operations should be ordered so that a later failure does not corrupt previously valid application state.
+
+---
+
+# 83C. TWO SHORTCUTS — SOURCE MODE AND PACKAGED MODE
+
+The two Desktop shortcuts must work in both supported deployment models.
+
+## Development/source mode
+
+If the user has not packaged the application, shortcuts may target the project's approved Python runtime and application entry point, for example:
+
+```text
+<project>\.venv\Scripts\pythonw.exe <project>\main.py --config
+```
+
+and:
+
+```text
+<project>\.venv\Scripts\python.exe <project>\main.py --run
+```
+
+The exact implementation may differ.
+
+The shortcut target must use explicit executable + argument separation and must not construct an arbitrary shell command.
+
+## Packaged mode
+
+If the application is packaged:
+
+```text
+VirtualDesktopWorkspaceManager.exe --config
+VirtualDesktopWorkspaceManager.exe --run
+```
+
+must be supported.
+
+The shortcuts must target the packaged executable rather than a development interpreter.
+
+## Shortcut working directory
+
+The shortcut must use a safe, deterministic working directory.
+
+Do not depend on the user's current directory.
+
+Do not use Desktop, Downloads, or another arbitrary user folder as an implicit working directory.
+
+## Shortcut icon
+
+Both shortcuts must use an application-owned icon.
+
+Prefer:
+
+```text
+assets\VirtualDesktopWorkspaceManager.ico
+```
+
+or the equivalent packaged resource.
+
+Use distinct visual variants for:
+
+```text
+Configure
+Run Workspace
+```
+
+if practical, while retaining common application branding.
+
+The icon must not be downloaded dynamically.
+
+---
+
+# 83D. SHORTCUT OWNERSHIP METADATA
+
+The application must be able to distinguish its own shortcuts from unrelated Desktop shortcuts.
+
+Use one or more of:
+
+* deterministic shortcut names;
+* explicit application-owned metadata;
+* a stable application identifier;
+* target/argument validation;
+* installer ownership records.
+
+Do NOT rely only on "this shortcut looks similar".
+
+When repairing shortcuts:
+
+```text
+Inspect
+→ identify owned shortcut
+→ validate target
+→ repair only owned shortcut
+→ verify
+```
+
+Never replace or delete an unrelated shortcut with a similar name.
+
+If two shortcuts with the same expected application-owned name exist:
+
+* inspect their targets;
+* identify the valid owned shortcut;
+* report duplicates;
+* remove/repair only those proven to belong to this application;
+* never delete an ambiguous unrelated shortcut automatically.
+
+---
+
+# 83E. SETUP / APPLICATION / WORKSPACE STATE MACHINE
+
+Document and enforce these states:
+
+```text
+NOT SET UP
+    ↓
+SETUP REQUIRED
+    ↓
+SET UP
+    ↓
+CONFIGURED
+    ↓
+READY TO RUN
+    ↓
+RUNNING
+    ↓
+COMPLETED / WARNING / FAILED / CANCELLED
+```
+
+Important:
+
+```text
+SET UP ≠ RUNNING
+CONFIGURED ≠ RUNNING
+GUI OPEN ≠ RUNNING
+```
+
+Opening the Configure shortcut must never transition the application into workspace execution.
+
+Only an explicit Run Workspace operation may enter the execution state.
+
+---
+
+# 83F. FIRST SETUP MUST NOT EXECUTE A DEFAULT WORKSPACE
+
+If no configuration exists, `run.py` may create a safe initial configuration template.
+
+For example:
+
+```text
+Development
+    Desktop definitions: unassigned
+    Applications: empty or disabled
+```
+
+If the project provides example application templates for Brave, Antigravity, SSMS, Postman, VS Code, Docker, or other applications:
+
+* templates may be displayed;
+* templates may assist configuration;
+* paths may be discovered;
+* no application may be launched;
+* no desktop may be created;
+* no window may be moved.
+
+Do not make the default configuration silently executable.
+
+---
+
+# 83G. SETUP LOGGING
+
+`run.py` must create a setup log separate from normal workspace-operation logs.
+
+Example:
+
+```text
+%APPDATA%\VirtualDesktopWorkspaceManager\logs\setup.log
+```
+
+Record:
+
+* timestamp
+* setup version
+* Python version
+* Windows version
+* setup mode
+* completed steps
+* skipped steps
+* warnings
+* errors
+* exit status
+
+Do not record:
+
+* passwords
+* access tokens
+* secrets
+* browser profile data
+* full sensitive command lines
+
+---
+
+# 83H. SETUP ACCEPTANCE TESTS
+
+At minimum implement mock/unit tests for:
+
+1. Windows version detection.
+2. Architecture detection.
+3. Python compatibility detection.
+4. Existing `.venv` detection.
+5. Missing `.venv` creation planning.
+6. Dependency validation.
+7. Existing configuration preservation.
+8. Initial configuration creation.
+9. Shortcut creation logic.
+10. Shortcut idempotency.
+11. Shortcut repair.
+12. Unrelated shortcut protection.
+13. Invalid setup-state handling.
+14. Setup failure exit codes.
+15. `--check` performs no modifications.
+16. `run.py` never calls the workspace execution engine.
+17. `run.py` never launches configured applications.
+18. `run.py` never performs real Virtual Desktop operations.
+
+Where real Windows APIs are needed, use mocks/fakes for development validation.
+
+Do not use the developer's real Desktop as a test fixture.
+
+---
+
+# 83I. SETUP SECURITY REVIEW
+
+Create:
+
+```text
+docs/setup-security-review.md
+```
+
+Review at minimum:
+
+| Risk | Required mitigation |
+|---|---|
+| Arbitrary dependency installation | Install only declared/pinned dependencies |
+| Arbitrary command execution | Structured subprocess/API calls |
+| Shortcut hijacking | Validate target and ownership |
+| Path injection | Validate and normalize paths |
+| Malicious configuration | Never execute configuration as code |
+| Partial setup | Ordered/idempotent setup with failure reporting |
+| Global Python pollution | Prefer project-local `.venv` |
+| Accidental application launch | `run.py` has no workspace execution path |
+| Accidental desktop manipulation | No Virtual Desktop execution code in setup |
+| Privilege escalation | No automatic elevation |
+| Secret leakage | Redacted setup logs |
+| Network dependency | Setup-only package retrieval; runtime remains offline |
+| Duplicate setup artifacts | Idempotent checks |
+| Unrelated shortcut deletion | Ownership verification |
+
+---
+
+# 83J. MANUAL SETUP FLOW
+
+Document the expected user flow clearly:
+
+```text
+1. Open the project folder.
+2. Run:
+       py run.py
+3. Review setup result.
+4. Setup creates/repairs the application environment and owned shortcuts.
+5. Double-click:
+       Virtual Desktop Workspace Manager — Configure
+6. Configure and save the workspace.
+7. Close the GUI if desired.
+8. When ready, double-click:
+       Virtual Desktop Workspace Manager — Run Workspace
+```
+
+At no point should setup itself execute the workspace.
+
+---
+
+# 83K. UPDATE / RE-RUN SETUP SAFETY
+
+If the user runs `run.py` again after an application update:
+
+* preserve user configuration;
+* preserve profiles;
+* preserve logs;
+* preserve backups;
+* preserve user-selected executable paths;
+* preserve desktop mappings unless migration requires review;
+* update only application-owned setup artifacts;
+* repair shortcuts when necessary;
+* migrate configuration schema when required;
+* never automatically execute the workspace.
+
+If a schema migration could change behavior:
+
+```text
+Configuration migration available.
+
+Your current configuration will be backed up before migration.
+
+[Cancel] [Review] [Migrate]
+```
+
+Never silently discard unknown configuration fields.
+
+---
+
+# 83L. CLEAR SEPARATION OF SETUP AND RUNTIME COMMANDS
+
+The final command contract must be:
+
+```text
+SETUP BOOTSTRAP
+----------------
+py run.py
+py run.py --setup
+py run.py --repair
+py run.py --check
+py run.py --help
+py run.py --version
+
+APPLICATION
+-----------
+VirtualDesktopWorkspaceManager.exe --config
+VirtualDesktopWorkspaceManager.exe --run
+VirtualDesktopWorkspaceManager.exe --dry-run
+VirtualDesktopWorkspaceManager.exe --diagnostics
+VirtualDesktopWorkspaceManager.exe --version
+VirtualDesktopWorkspaceManager.exe --help
+```
+
+The source-mode equivalent may use:
+
+```text
+.venv\Scripts\python.exe main.py --config
+.venv\Scripts\python.exe main.py --run
+```
+
+Do not confuse `run.py` with `main.py`.
+
+The filename `run.py` refers to setup/bootstrap, not workspace execution.
 
 ---
 
@@ -4660,6 +5357,26 @@ Before completion verify:
 * [ ] Shortcut repair does not duplicate shortcuts
 * [ ] Uninstall removes only application-owned shortcuts
 * [ ] Shortcut acceptance tests are implemented
+* [ ] Root-level `run.py` exists
+* [ ] `run.py` is setup/bootstrap only
+* [ ] `run.py` never executes the workspace
+* [ ] `run.py` never launches configured applications
+* [ ] `run.py` never manipulates real Virtual Desktops
+* [ ] `run.py` setup is idempotent
+* [ ] `run.py --check` is non-destructive
+* [ ] `run.py --repair` repairs only application-owned setup artifacts
+* [ ] Project-local virtual environment is supported where appropriate
+* [ ] Dependencies are declared and pinned
+* [ ] Setup state is separate from workspace configuration
+* [ ] Setup logging exists
+* [ ] Setup security review exists
+* [ ] Source-mode shortcuts are supported
+* [ ] Packaged-mode shortcuts are supported
+* [ ] Setup failure returns a non-zero exit code
+* [ ] Existing user configuration is preserved during setup/update
+* [ ] Re-running setup does not duplicate shortcuts
+* [ ] Setup-time network use is limited to declared dependency installation
+* [ ] Runtime remains offline-first
 
 
 # 148A. DESKTOP SHORTCUT ACCEPTANCE TESTS
@@ -4763,6 +5480,23 @@ Unit and mock integration tests.
 
 Dependency file with versions.
 
+## Setup / Bootstrap
+
+The project must include:
+
+* `run.py`
+* documented setup modes
+* idempotent environment setup
+* dependency verification
+* configuration-directory initialization
+* setup-state handling
+* setup logging
+* shortcut creation/repair
+* setup acceptance tests
+* `docs/setup-security-review.md`
+
+`run.py` must be setup/bootstrap only and must never execute the workspace.
+
 ## Packaging
 
 Instructions for creating a Windows executable/package.
@@ -4813,6 +5547,11 @@ After completing the project, report:
 18. Log location
 19. Diagnostic instructions
 20. Remaining issues, if any
+21. `run.py` setup behavior and supported setup commands
+22. Whether setup was executed or only statically reviewed
+23. Whether shortcuts were created during validation
+24. Setup dependency installation status
+25. Setup/security review status
 
 Do NOT claim the application was tested interactively if it was not launched.
 
@@ -4865,6 +5604,13 @@ These rules override convenience.
 33. **NEVER automatically switch the user's desktop unless required and explicitly handled.**
 34. **NEVER fight the user indefinitely when they manually change application state.**
 35. **NEVER run the finished application until I explicitly tell you to run it.**
+36. **NEVER execute `run.py` during development merely to prove setup works.**
+37. **NEVER treat `run.py` as the workspace execution entry point.**
+38. **NEVER let `run.py` launch configured applications or manipulate Virtual Desktops.**
+39. **NEVER create the real Desktop shortcuts during Google Antigravity development unless I explicitly authorize running the setup process.**
+40. **NEVER let setup overwrite valid user configuration without backup and validation.**
+41. **NEVER let setup remove unrelated Desktop shortcuts.**
+42. **NEVER require global Python package installation when a project-local environment is sufficient.**
 
 ---
 
@@ -4887,6 +5633,13 @@ These rules are mandatory:
 13. The default application launch mode must be configuration-only unless the user explicitly invokes `--run` or the GUI's equivalent Run Workspace action.
 14. Configuration persistence must use the same validated user-level configuration source for GUI, Run shortcut, Dry Run, diagnostics, and other entry points.
 15. No entry point may silently enable startup automation.
+16. `run.py` is a setup/bootstrap entry point, not a workspace execution entry point.
+17. `py run.py` must not launch the GUI after setup unless explicitly designed as a separate, opt-in command; default behavior is setup completion and exit.
+18. `run.py --check` must be non-destructive.
+19. `run.py --repair` may modify only application-owned setup artifacts and must not execute workspace actions.
+20. Setup must preserve user configuration, profiles, logs, and backups.
+21. Setup must use the same application-owned shortcut identity rules defined in this specification.
+22. The runtime application must load the same persisted configuration regardless of whether it is started from the Configure shortcut, Run shortcut, packaged executable, or source-mode entry point.
 
 ---
 
@@ -4904,8 +5657,25 @@ Desktop shortcut 2 → Virtual Desktop Workspace Manager — Run Workspace
 The Configure shortcut must open the GUI only.
 The Run Workspace shortcut must execute the saved active workspace according to the safety and confirmation rules.
 All settings changed in the GUI must persist and be reused by the Run Workspace shortcut.
-Create the installer/packaging logic for these shortcuts, but do not create or click the real shortcuts on my Desktop during development.
+Create the installer/packaging logic and the root-level `run.py` setup/bootstrap logic for these shortcuts, but do not execute `run.py` or create/click the real shortcuts on my Desktop during development.
 
+`run.py` must be complete enough to set up the source-mode application on a user's Windows 10/11 system when the user explicitly runs it.
+
+`run.py` must:
+* detect and validate Windows/Python compatibility;
+* create/use the project-local environment where appropriate;
+* install only declared dependencies;
+* initialize user-level application directories;
+* validate/preserve existing configuration;
+* create or repair the two application-owned Desktop shortcuts;
+* verify setup;
+* produce a setup report and exit;
+* never launch the application;
+* never launch the workspace;
+* never manipulate real Virtual Desktops;
+* never launch configured applications.
+
+Do not execute `run.py` during Google Antigravity development merely because the prompt asks for it to be created.
 
 Do not immediately execute the application.
 
@@ -4934,7 +5704,9 @@ Do not launch Visual Studio.
 Do not launch VS Code.
 
 Do not create startup automation.
-
+Do not execute `run.py` as part of development.
+Do not create the real Desktop shortcuts during development.
+Do not perform real setup changes on my Windows installation during development.
 Do not modify my Windows workspace.
 
 Do not perform real workspace execution.
@@ -4947,8 +5719,11 @@ Every important Windows API limitation must be documented.
 
 Every safety-sensitive action must require the appropriate explicit user authorization.
 
-When implementation and safe validation are complete, stop.
+When implementation, static validation, and safe mocked tests are complete, stop.
 
+Do not execute setup unless I explicitly authorize setup.
+Do not execute the application unless I explicitly authorize the application.
+Do not execute the workspace unless I explicitly authorize the workspace.
 Report the project status.
 
 Then wait.

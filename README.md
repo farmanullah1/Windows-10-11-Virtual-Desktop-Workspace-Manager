@@ -3,6 +3,7 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
 [![Platform Windows](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011%20(64--bit)-0078d4.svg)](https://microsoft.com)
 [![License MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Tests Passing](https://img.shields.io/badge/tests-41%20passed-brightgreen.svg)](tests/)
 
 A production-quality utility for **Windows 10 and Windows 11** that manages Windows Virtual Desktops and organizes your applications into persistent, customized virtual workspaces. Applications are automatically launched or moved to designated virtual desktops with zero destructive behavior, failure isolation, and transparent observability.
 
@@ -10,13 +11,15 @@ A production-quality utility for **Windows 10 and Windows 11** that manages Wind
 
 ## 1. What the Application Does
 
-* **Virtual Desktop Detection**: Detects currently available Windows Virtual Desktops.
+* **Virtual Desktop Detection**: Detects currently available Windows Virtual Desktops using COM interop (`IVirtualDesktopManager` / Windows 10/11 VDA).
 * **Safe Desktop Creation**: Automatically creates required virtual desktops up to your workspace layout; **never** deletes existing user desktops.
 * **Intelligent Window Movement**: Identifies visible top-level windows and moves them to their assigned virtual desktop.
 * **Process Pre-Detection**: Detects already running applications and reuses existing windows without spawning unnecessary duplicate processes.
 * **Multi-App Desktop Layouts**: Allows assigning any number of applications to the same virtual desktop.
 * **Non-Destructive Design**: Never terminates running processes, never uninstalls software, and never deletes user files or repositories.
 * **Workspace Profiles**: Switch between dedicated profiles (e.g., Development, Database, Work, Personal) with one click.
+* **Single-Instance Protection**: Enforces single-instance execution via Windows named mutex (`Local\VirtualDesktopWorkspaceManager_SingleInstance_Mutex`) and brings existing window to foreground on duplicate launches.
+* **8-Point Health Check**: Built-in non-destructive diagnostic verification of Windows version, API providers, permissions, configuration, and logging storage.
 * **Dry-Run Inspection**: Previews all pending actions without executing any changes.
 * **Crash Recovery**: Detects incomplete operations and offers one-click state reconciliation.
 * **Live Observability**: Live log panel with filtering, searching, and privacy-redacted diagnostic reports.
@@ -165,6 +168,14 @@ Before executing any desktop operations, click **🔍 Dry Run** to preview what 
 * Any warnings for missing executables.
 * **Guarantees zero modifications during dry-run.**
 
+From the command line:
+
+```cmd
+python main.py --dry-run
+# or
+python configure.py --dry-run
+```
+
 ---
 
 ## 12. Troubleshooting & Recovery
@@ -204,7 +215,44 @@ The application provides two separate user-facing Desktop shortcuts with dedicat
 
 ---
 
-## 14. Logs & Diagnostics
+## 14. Diagnostics & 8-Point Health Check
+
+The manager includes comprehensive, non-destructive diagnostic tools:
+
+### Diagnostic Health Check
+
+Click **Health Check** in the header toolbar, or run via CLI:
+
+```cmd
+python configure.py --health-check
+# or
+python main.py --health-check
+```
+
+Verifies all 8 critical subsystems:
+
+```text
+✓ Windows Supported: Windows 10/11 version and build verification
+✓ Virtual Desktop Provider Available: COM / pyvda provider readiness
+✓ Configuration Valid: Schema and data integrity validation
+✓ Desktop Mappings Valid: Validates desktop target numbers
+✓ Applications Detected: Locates configured executables on disk
+✓ Permissions Sufficient: Verifies Standard User (Medium Integrity)
+✓ Configuration Storage Writable: Checks %APPDATA% storage access
+✓ Logging Storage Writable: Verifies log directory writability
+```
+
+### About Dialog
+
+Click **About** in the header toolbar to view:
+
+* Version and production build details.
+* Python runtime architecture and Windows build string.
+* Active desktop, process, and window provider backends.
+* MIT License and security integrity level.
+* Direct shortcut to run the Health Check.
+
+### Live Operation Logs
 
 * Logs are written daily to: `%APPDATA%\VirtualDesktopWorkspaceManager\logs\workspace_YYYYMMDD.log`.
 * View live streaming logs with level filtering and search in the bottom panel of the GUI.
@@ -249,10 +297,13 @@ python main.py --config           # Open Configuration GUI (default)
 python main.py --run              # Execute active workspace profile
 python main.py --dry-run          # Print dry run preview and exit
 python main.py --sync             # Reconcile window positions and exit
+python main.py --health-check     # Run 8-point system diagnostic health check
 python main.py --minimized        # Start minimized to system tray
 python main.py --profile "Work"   # Activate a specific profile
 python main.py --create-shortcuts # Install user Desktop shortcuts
 python main.py --remove-shortcuts # Cleanly uninstall Desktop shortcuts
+python main.py --no-prompt        # Skip confirmation prompt for --run
+python main.py --headless         # Run in headless mode without GUI popups
 ```
 
 ### Packaging into a Standalone EXE
@@ -265,7 +316,25 @@ Output executable will be in `dist/VirtualDesktopWorkspaceManager.exe`. See [doc
 
 ---
 
-## 18. Technical Documentation Index
+## 18. Automated Test Suite
+
+The application includes a comprehensive test suite of **41 unit, integration, and acceptance tests**:
+
+```cmd
+python -m pytest -v
+```
+
+### Test Suite Safety Guarantees
+
+* **100% Non-Destructive**: All tests execute using isolated mock providers (`MockVirtualDesktopProvider`, `MockProcessProvider`, `MockWindowProvider`, `MockApplicationLauncher`).
+* **Zero Real Processes**: No third-party tools, browsers, or editors are launched during testing.
+* **Zero Virtual Desktop Alterations**: Host virtual desktops are never touched or switched.
+* **Isolated Temporary Directories**: All configuration, logging, and shortcut tests use isolated temporary folders that are automatically cleaned up.
+* **Acceptance Coverage**: Tests all 8 desktop shortcut acceptance scenarios, window matching policies, single-instance mutex locks, configuration atomic writes, and crash recovery.
+
+---
+
+## 19. Technical Documentation Index
 
 * [Architecture Specification](docs/architecture.md)
 * [Requirements Analysis](docs/requirements-analysis.md)
@@ -280,7 +349,7 @@ Output executable will be in `dist/VirtualDesktopWorkspaceManager.exe`. See [doc
 
 ---
 
-## 19. Uninstalling
+## 20. Uninstalling
 
 To uninstall:
 
