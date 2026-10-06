@@ -93,6 +93,22 @@ class SettingsDialog(tk.Toplevel):
         self.theme_combo = ttk.Combobox(theme_row, textvariable=self.theme_var, values=["System", "Light", "Dark"], state="readonly", width=12)
         self.theme_combo.pack(side=tk.LEFT)
 
+        ttk.Separator(tab_general, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=12)
+
+        # Desktop Shortcuts Section
+        ttk.Label(tab_general, text="User Desktop Shortcuts", style="SubHeader.TLabel").pack(anchor=tk.W, pady=(0, 4))
+        ttk.Label(
+            tab_general,
+            text="Manage the 2 official shortcuts: 'Configure' (opens GUI) and 'Run Workspace' (executes active profile).",
+            wraplength=480,
+            foreground="#666666"
+        ).pack(anchor=tk.W, pady=(0, 6))
+
+        sc_row = ttk.Frame(tab_general)
+        sc_row.pack(fill=tk.X, pady=4)
+        ttk.Button(sc_row, text="Create Desktop Shortcuts", command=self._create_desktop_shortcuts).pack(side=tk.LEFT, padx=(0, 8))
+        ttk.Button(sc_row, text="Remove Owned Shortcuts", command=self._remove_desktop_shortcuts).pack(side=tk.LEFT)
+
         # --- Tab 2: Execution & Timing ---
         tab_exec = ttk.Frame(notebook, padding=12)
         notebook.add(tab_exec, text="Execution")
@@ -197,6 +213,35 @@ class SettingsDialog(tk.Toplevel):
             os.startfile(str(log_dir))
         else:
             subprocess.Popen(["explorer", str(log_dir)])
+
+    def _create_desktop_shortcuts(self) -> None:
+        from app.services.shortcut_service import ShortcutService
+        from tkinter import messagebox
+        svc = ShortcutService()
+        res = svc.create_desktop_shortcuts()
+        if res.get("config") and res.get("run"):
+            messagebox.showinfo(
+                "Shortcuts Created",
+                "Created 2 Desktop shortcuts successfully:\n\n"
+                "• Virtual Desktop Workspace Manager — Configure\n"
+                "• Virtual Desktop Workspace Manager — Run Workspace",
+                parent=self
+            )
+        else:
+            messagebox.showwarning("Warning", "Failed to create some shortcuts.", parent=self)
+
+    def _remove_desktop_shortcuts(self) -> None:
+        from app.services.shortcut_service import ShortcutService
+        from tkinter import messagebox
+        if messagebox.askyesno(
+            "Remove Shortcuts",
+            "Remove the 2 application Desktop shortcuts?\n\n(Unrelated user shortcuts will remain untouched)",
+            parent=self
+        ):
+            svc = ShortcutService()
+            svc.remove_desktop_shortcuts()
+            messagebox.showinfo("Shortcuts Removed", "Owned Desktop shortcuts removed cleanly.", parent=self)
+
 
     def _save(self) -> None:
         # Update config object

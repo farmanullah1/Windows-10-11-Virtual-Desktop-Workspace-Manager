@@ -34,10 +34,12 @@ setup(
     entry_points={
         "console_scripts": [
             "vdwm=app.main:main",
+            "vdwm-configure=app.main:main",
+            "vdwm-run=run_workspace:main",
         ],
         "gui_scripts": [
             "vdwm-gui=app.main:main",
-        ]
+        ],
     },
     classifiers=[
         "Operating System :: Microsoft :: Windows",
