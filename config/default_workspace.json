@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "profiles": [
+    {
+      "id": "default",
+      "name": "Default Workspace",
+      "description": "Default 4-desktop developer workspace",
+      "desktops": [
+        {
+          "number": 1,
+          "name": "Browser",
+          "desktop_id": null
+        },
+        {
+          "number": 2,
+          "name": "Development",
+          "desktop_id": null
+        },
+        {
+          "number": 3,
+          "name": "Database",
+          "desktop_id": null
+        },
+        {
+          "number": 4,
+          "name": "API Development",
+          "desktop_id": null
+        }
+      ],
+      "apps": [
+        {
+          "id": "brave",
+          "name": "Brave Browser",
+          "executable": "%ProgramFiles%\\BraveSoftware\\Brave-Browser\\Application\\brave.exe",
+          "arguments": "",
+          "desktop": 1,
+          "enabled": true,
+          "launch_mode": "launch_if_missing",
+          "move_existing_window": true,
+          "window_policy": "main",
+          "title_pattern": "",
+          "launch_delay_ms": 1000,
+          "window_timeout_ms": 15000,
+          "process_names": [
+            "brave.exe"
+          ]
+        },
+        {
+          "id": "antigravity",
+          "name": "Google Antigravity",
+          "executable": "%LocalAppData%\\Programs\\Google Antigravity\\Google Antigravity.exe",
+          "arguments": "",
+          "desktop": 2,
+          "enabled": true,
+          "launch_mode": "launch_if_missing",
+          "move_existing_window": true,
+          "window_policy": "main",
+          "title_pattern": "",
+          "launch_delay_ms": 1000,
+          "window_timeout_ms": 15000,
+          "process_names": [
+            "Google Antigravity.exe",
+            "antigravity.exe",
+            "agy.exe"
+          ]
+        },
+        {
+          "id": "ssms",
+          "name": "SQL Server Management Studio",
+          "executable": "%ProgramFiles(x86)%\\Microsoft SQL Server Management Studio 20\\Common7\\IDE\\Ssms.exe",
+          "arguments": "",
+          "desktop": 3,
+          "enabled": true,
+          "launch_mode": "launch_if_missing",
+          "move_existing_window": true,
+          "window_policy": "main",
+          "title_pattern": "",
+          "launch_delay_ms": 1000,
+          "window_timeout_ms": 15000,
+          "process_names": [
+            "Ssms.exe"
+          ]
+        },
+        {
+          "id": "postman",
+          "name": "Postman",
+          "executable": "%LocalAppData%\\Postman\\Postman.exe",
+          "arguments": "",
+          "desktop": 4,
+          "enabled": true,
+          "launch_mode": "launch_if_missing",
+          "move_existing_window": true,
+          "window_policy": "main",
+          "title_pattern": "",
+          "launch_delay_ms": 1000,
+          "window_timeout_ms": 15000,
+          "process_names": [
+            "Postman.exe"
+          ]
+        }
+      ]
+    }
+  ],
+  "general": {
+    "start_with_windows": false,
+    "auto_launch_workspace": false,
+    "confirm_before_execution": true,
+    "minimize_to_tray": false,
+    "start_minimized": false,
+    "theme": "System",
+    "active_profile_id": "default",
+    "first_run_completed": false
+  },
+  "execution": {
+    "window_timeout_ms": 15000,
+    "polling_interval_ms": 250,
+    "launch_delay_ms": 1000,
+    "retry_count": 3
+  },
+  "logging": {
+    "log_level": "INFO",
+    "log_retention_days": 14,
+    "log_dir": ""
+  },
+  "safety": {
+    "automation_enabled": true,
+    "require_confirmation": true,
+    "dry_run_default": false,
+    "never_kill_processes": true,
+    "never_delete_desktops": true
+  }
+}

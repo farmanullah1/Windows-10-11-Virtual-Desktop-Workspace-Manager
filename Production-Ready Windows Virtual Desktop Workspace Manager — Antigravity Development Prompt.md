@@ -1,1551 +1,646 @@
-# Build a Production-Ready Windows 10/11 Virtual Desktop Workspace Manager
+# BUILD A PRODUCTION-READY WINDOWS 10/11 VIRTUAL DESKTOP WORKSPACE MANAGER
 
 ## 1. ROLE
 
-Act as a senior Windows desktop software engineer and build a **production-quality Windows 10/11 Virtual Desktop Workspace Manager**.
+Act as a senior Windows desktop software engineer, Windows API engineer, application architect, security engineer, QA engineer, and UX engineer.
 
-The application will manage Windows Virtual Desktops and allow the user to create a persistent workspace where applications are automatically launched and/or moved to specific virtual desktops.
+Build a **production-quality Windows 10/11 Virtual Desktop Workspace Manager**.
 
-The application must have a **modern, clean desktop UI**, persistent configuration, safe execution, strong error handling, detailed logging, and recovery mechanisms.
+This is a real desktop utility intended for daily use.
 
-This is NOT a prototype, proof of concept, or simple keyboard-macro script.
+It is NOT:
 
-Build it as a reliable utility that I can actually use daily.
+* a prototype
+* a proof of concept
+* a toy script
+* a keyboard macro
+* a fake dashboard
+* a UI mockup
+* a collection of disconnected buttons
+* a one-file automation script
+
+The application must provide a reliable graphical interface for creating, configuring, launching, monitoring, and synchronizing persistent application workspaces across Windows Virtual Desktops.
+
+The application must prioritize:
+
+1. Reliability
+2. Safety
+3. Correct Windows API integration
+4. Accurate window detection
+5. Correct Virtual Desktop assignment
+6. Idempotent execution
+7. User control
+8. Persistent configuration
+9. Recovery
+10. Testability
+11. Maintainability
+12. Professional UI/UX
+
+Do not sacrifice reliability for visual effects.
+
+Do not sacrifice safety for automation.
+
+Do not sacrifice maintainability by putting everything into one giant script.
 
 ---
 
-# 2. PRIMARY OBJECTIVE
+# 2. ABSOLUTE DEVELOPMENT SAFETY RULE
 
-Create a Windows application that can:
+## DO NOT RUN THE GENERATED APPLICATION
 
-1. Detect the currently available Windows Virtual Desktops.
-2. Create additional Virtual Desktops when required.
-3. Maintain a configurable workspace layout.
-4. Assign one or multiple applications to the same Virtual Desktop.
-5. Launch applications automatically.
-6. Detect applications that are already running.
-7. Detect their windows.
-8. Move existing application windows to their assigned Virtual Desktop whenever technically possible.
-9. Allow the user to change application-to-desktop assignments from the UI.
-10. Allow the user to add new applications later without modifying source code.
-11. Allow applications to be removed from the workspace.
-12. Allow multiple applications on the same desktop.
-13. Allow an application to be reassigned from one desktop to another.
-14. Save all configuration persistently.
-15. Restore the workspace later.
-16. Provide a "Launch Workspace" button.
-17. Provide a "Sync / Repair Workspace" button.
-18. Provide a "Stop / Cancel" mechanism where practical.
-19. Provide detailed logs and diagnostics.
-20. Never automatically launch or modify applications simply because the manager starts unless the user explicitly enables that behavior.
+This rule has the highest priority.
 
----
+While working inside Google Antigravity:
 
-# 3. VERY IMPORTANT DEVELOPMENT RULE
+* Create the complete project.
+* Create all source files.
+* Create configuration files.
+* Create documentation.
+* Create tests.
+* Create mock providers.
+* Perform static validation.
+* Perform safe isolated tests where possible.
 
-## DO NOT RUN THE CREATED APPLICATION AUTOMATICALLY
+But:
 
-When developing this project inside Google Antigravity:
+**DO NOT RUN THE GENERATED APPLICATION.**
 
-- Create the complete project.
-- Create all source files.
-- Create configuration files.
-- Create documentation.
-- Create tests.
-- Perform static validation where possible.
-- Do NOT launch the generated application.
-- Do NOT execute the launcher against my actual Windows desktops.
-- Do NOT create/move virtual desktops.
-- Do NOT launch Brave.
-- Do NOT launch Antigravity.
-- Do NOT launch SSMS.
-- Do NOT launch Postman.
-- Do NOT modify my Windows workspace.
+Do NOT:
 
-Only build the application.
+* launch the generated GUI
+* launch the workspace manager
+* create Windows Virtual Desktops
+* delete Virtual Desktops
+* switch my real desktop
+* move my real application windows
+* launch Brave
+* launch Google Antigravity
+* launch SQL Server Management Studio
+* launch Postman
+* launch Docker
+* launch Visual Studio
+* launch VS Code
+* launch Git Bash
+* modify my current workspace
+* modify my Windows settings
+* create Windows startup entries
+* create scheduled tasks
+* install the application
+* execute the real workspace configuration
+
+Do not "test" the application by accidentally operating on the real Windows desktop.
+
+If validation is required, use:
+
+* static analysis
+* syntax checking
+* mocked providers
+* fake application providers
+* fake desktop providers
+* fake window providers
+* temporary isolated test data
+* configuration validation
+* unit tests
+* integration tests that do not manipulate the real Virtual Desktop environment
+
+If a command could affect the host Windows environment, do not execute it automatically.
 
 Wait for my explicit instruction before running the generated application.
 
-If a build/test command is completely necessary, prefer static validation or isolated tests that do not modify the host desktop environment.
+The instruction:
+
+> "Run the application"
+
+must be treated as a separate future authorization.
+
+Do not interpret:
+
+* "build it"
+* "finish it"
+* "test it"
+* "validate it"
+* "complete the project"
+
+as permission to launch the application.
 
 ---
 
-# 4. PLATFORM
+# 3. PRIMARY OBJECTIVE
+
+Build an application that can:
+
+1. Detect Windows Virtual Desktops.
+2. Detect the current Virtual Desktop.
+3. Create additional Virtual Desktops when required and when supported.
+4. Identify stable desktop IDs where available.
+5. Maintain user-defined workspace configurations.
+6. Assign one application to a desktop.
+7. Assign multiple applications to the same desktop.
+8. Add applications later without source-code changes.
+9. Remove applications from the workspace without uninstalling them.
+10. Reassign applications between desktops.
+11. Detect already-running applications.
+12. Detect application windows.
+13. Identify the correct top-level application window.
+14. Move windows to the desired Virtual Desktop when supported.
+15. Verify the move when technically possible.
+16. Launch applications when configured to do so.
+17. Avoid unnecessary duplicate application launches.
+18. Synchronize actual state with desired state.
+19. Provide dry-run mode.
+20. Provide a Launch Workspace operation.
+21. Provide a Sync Workspace operation.
+22. Provide cancellation.
+23. Provide an emergency stop.
+24. Persist configuration.
+25. Back up configuration.
+26. Import/export configuration.
+27. Support workspace profiles.
+28. Provide diagnostics.
+29. Provide detailed logs.
+30. Provide a professional Windows desktop UI.
+31. Operate without Administrator privileges whenever possible.
+32. Never delete user-created Virtual Desktops automatically.
+33. Never kill user applications automatically.
+34. Never uninstall applications.
+35. Never delete user files.
+36. Never modify development data.
+37. Never silently enable startup automation.
+38. Never execute automatically simply because the manager opens.
+
+---
+
+# 4. IMPORTANT TECHNICAL PRINCIPLE
+
+Do not assume that Windows provides one simple public API for every Virtual Desktop operation.
+
+Before implementation, investigate the currently appropriate Windows mechanisms for:
+
+* Virtual Desktop enumeration
+* Virtual Desktop creation
+* Virtual Desktop deletion
+* Virtual Desktop switching
+* Virtual Desktop IDs
+* current desktop detection
+* window desktop detection
+* moving windows between desktops
+
+Microsoft's documented `IVirtualDesktopManager` supports operations including obtaining a window's desktop ID, checking whether a window is on the current desktop, and moving a window to a specified desktop.
+
+However, do NOT assume that the documented public API alone provides every operation required by this application.
+
+If enumeration, creation, switching, or other functionality requires undocumented/internal Windows interfaces or a third-party library:
+
+1. Identify that dependency.
+2. Verify compatibility.
+3. Isolate it behind an abstraction.
+4. Detect unsupported environments.
+5. Fail gracefully.
+6. Do not pretend unsupported functionality succeeded.
+7. Document the limitation.
+8. Provide the safest fallback possible.
+
+If using `pyvda` or another third-party library, verify the actual current package/version and Windows compatibility before implementation. Do not blindly copy old examples.
+
+---
+
+# 5. TECHNOLOGY SELECTION
+
+You may choose:
+
+* Python
+* PowerShell
+* another appropriate Windows desktop technology
+
+However, choose based on reliability rather than convenience.
+
+For Python, investigate appropriate technologies such as:
+
+* pywin32
+* psutil
+* pyvda or another maintained Virtual Desktop integration library
+* PySide/PyQt
+* tkinter only if it provides an adequate professional UI
+
+For PowerShell, use proper Windows APIs/modules rather than relying primarily on simulated keyboard input.
+
+If another technology is substantially more reliable for Windows desktop integration, explain why it is selected.
+
+Before implementation, create:
+
+`docs/technology-decision.md`
+
+Include:
+
+* selected technology
+* alternatives considered
+* reasons for selection
+* dependencies
+* Windows compatibility
+* known API limitations
+* packaging implications
+* maintenance considerations
+
+Do not choose technology merely because it is easiest to code.
+
+---
+
+# 6. WINDOWS COMPATIBILITY
 
 Target:
 
-- Windows 10
-- Windows 11
-- 64-bit Windows preferred
-- PowerShell and/or Python may be used.
+* Windows 10
+* Windows 11
+* 64-bit preferred
 
-Choose the implementation language based on reliability.
+The application must detect:
 
-Do NOT choose a technology merely because it is easier.
+* Windows version
+* build number
+* architecture
 
-The most important requirements are:
-
-1. Windows Virtual Desktop reliability
-2. Window detection
-3. Window-to-desktop movement
-4. Process management
-5. Persistent configuration
-6. UI usability
-7. Safe execution
-8. Maintainability
-
-If Python is selected, prefer appropriate Windows APIs/libraries such as:
-
-- pywin32
-- pyvda or another maintained Virtual Desktop integration library
-- psutil
-- tkinter / PySide / PyQt for UI, depending on the chosen architecture
-
-If PowerShell is selected, use appropriate Windows APIs/modules and avoid relying exclusively on simulated keyboard input.
-
-Before implementation, verify that the chosen Virtual Desktop API/library actually supports the required operations.
-
-Do not blindly assume that an API supports functionality that it does not actually provide.
-
----
-
-# 5. IMPORTANT WINDOWS VIRTUAL DESKTOP REQUIREMENT
-
-Windows Virtual Desktops are not ordinary application windows.
-
-The implementation must clearly separate:
-
-### Desktop operations
-
-- Enumerate desktops
-- Create desktops
-- Determine desktop order/index
-- Determine desktop IDs where available
-- Determine the current desktop
-- Switch desktop
-- Move a window between desktops
-- Detect desktop changes
-
-### Window operations
-
-- Enumerate top-level windows
-- Determine HWND
-- Determine process ID
-- Determine executable
-- Determine title
-- Determine visibility
-- Determine minimized/maximized state
-- Determine whether the window is usable
-- Move the window to a target Virtual Desktop
-
-Do not treat a process ID as equivalent to a window.
-
-One application can have:
-
-- multiple processes
-- multiple windows
-- child windows
-- background processes
-- splash screens
-- helper processes
-
-The system must therefore identify the **correct top-level application window**.
-
----
-
-# 6. DEFAULT WORKSPACE
-
-Create the following initial configuration:
-
-### Desktop 1 — Browser
-
-Application:
-
-- Brave Browser
-
-### Desktop 2 — Development
-
-Application:
-
-- Google Antigravity
-
-### Desktop 3 — Database
-
-Application:
-
-- SQL Server Management Studio
-
-### Desktop 4 — API Development
-
-Application:
-
-- Postman
-
-However, these defaults must NOT be hard-coded permanently.
-
-They must be editable through the UI.
-
----
-
-# 7. USER-CONFIGURABLE WORKSPACE
-
-The user must be able to completely customize the workspace.
+Create a compatibility/capability layer.
 
 Example:
 
 ```text
-Desktop 1
- ├── Brave
- ├── Chrome
- └── Spotify
-
-Desktop 2
- ├── Antigravity
- ├── VS Code
- └── File Explorer
-
-Desktop 3
- ├── SSMS
- └── Azure Data Studio
-
-Desktop 4
- ├── Postman
- ├── Docker Desktop
- └── Browser
+Windows Environment
+        ↓
+Capability Detection
+        ↓
+Virtual Desktop Provider
+        ↓
+Workspace Engine
 ```
 
-There must be NO limitation that one desktop can contain only one application.
+The application must not blindly assume that every Windows build behaves identically.
 
-A desktop can contain:
+At startup, determine whether required functionality is available.
 
-- 0 applications
-- 1 application
-- 2 applications
-- 10 applications
-- or more
-
-subject only to practical Windows limitations.
-
----
-
-# 8. UI REQUIREMENTS
-
-Build a proper desktop GUI.
-
-Do NOT make the UI just a terminal menu.
-
-The UI should contain the following major sections.
-
----
-
-## 8.1 Dashboard
-
-Display:
+Display capability status such as:
 
 ```text
-Virtual Desktop Workspace Manager
+Virtual Desktop Support
+✓ Enumeration
+✓ Current Desktop
+✓ Window Desktop Detection
+✓ Window Movement
+✓ Desktop Creation
 
-Current Desktop: Desktop 2
+Compatibility:
+Windows 11
+Build: XXXXX
 
-Workspace Status:
-✓ Desktop 1 Ready
-✓ Desktop 2 Ready
-⚠ Desktop 3 Missing Application
-✓ Desktop 4 Ready
+Provider:
+Supported
 ```
 
-Display:
+If functionality is unavailable:
 
-- Current Virtual Desktop
-- Total Virtual Desktops
-- Configured applications
-- Running applications
-- Missing applications
-- Workspace status
-- Last workspace launch time
+```text
+⚠ Virtual Desktop creation is unavailable on this system.
 
-Provide buttons:
+The manager can still provide:
+- configuration
+- application discovery
+- dry-run
+- diagnostics
+```
 
-- Launch Workspace
-- Sync Workspace
-- Refresh
-- Stop/Cancel
-- Open Settings
-- View Logs
+Never fake functionality.
 
 ---
 
-# 9. VIRTUAL DESKTOP PANEL
+# 7. DEFAULT WORKSPACE
 
-Display each desktop as a card.
-
-Example:
+Create an editable initial workspace:
 
 ```text
-┌─────────────────────────────────────┐
-│ Desktop 1                           │
-│ Browser                             │
-│                                     │
-│ ✓ Brave                             │
-│ ✓ Chrome                            │
-│                                     │
-│ [Open] [Edit] [Add App]             │
-└─────────────────────────────────────┘
+Desktop 1 — Browser
+    └── Brave Browser
+
+Desktop 2 — Development
+    └── Google Antigravity
+
+Desktop 3 — Database
+    └── SQL Server Management Studio
+
+Desktop 4 — API Development
+    └── Postman
 ```
 
-For Desktop 2:
+These are ONLY defaults.
 
-```text
-┌─────────────────────────────────────┐
-│ Desktop 2                           │
-│ Development                         │
-│                                     │
-│ ✓ Antigravity                       │
-│ ✓ VS Code                            │
-│ ✓ Git Bash                           │
-│                                     │
-│ [Open] [Edit] [Add App]             │
-└─────────────────────────────────────┘
-```
-
-Each desktop card should display:
-
-- Desktop number
-- Custom desktop name
-- Assigned applications
-- Running/stopped state
-- Missing application warning
-- Current desktop indicator
-- Open desktop button
-- Edit button
-- Add Application button
-
----
-
-# 10. APPLICATION MANAGEMENT
-
-Create an application management interface.
+They must never be permanently hard-coded.
 
 The user must be able to:
 
-### Add application
-
-Fields:
-
-```text
-Application Name
-Executable Path
-Arguments
-Target Desktop
-Launch Enabled
-Move Existing Window Enabled
-Launch Delay
-Window Matching Strategy
-```
-
-Provide:
-
-### Browse
-
-Allow the user to select an `.exe` file through a standard Windows file picker.
-
-### Detect
-
-Attempt to automatically detect:
-
-- executable
-- process name
-- application name
-- installation path
-- currently running windows
+* rename desktops
+* add desktops
+* remove workspace configuration
+* add applications
+* remove applications
+* reassign applications
+* configure launch behavior
+* configure matching rules
+* create profiles
 
 ---
 
-# 11. APPLICATION DISCOVERY
+# 8. CRITICAL DESKTOP IDENTITY RULE
 
-The application should provide a convenient way to add applications.
+Do NOT permanently identify desktops only by:
 
-Support:
+```text
+Desktop 1
+Desktop 2
+Desktop 3
+Desktop 4
+```
 
-### Method 1 — Browse for EXE
+The displayed number is a UI position.
+
+Where Windows exposes a stable desktop identifier/GUID, store it.
+
+Use a model such as:
+
+```json
+{
+  "workspaceDesktopId": "stable-manager-id",
+  "windowsDesktopId": "windows-guid-if-available",
+  "displayOrder": 1,
+  "name": "Browser"
+}
+```
+
+Important:
+
+Windows Virtual Desktop order may change.
+
+Users may manually create or reorder desktops.
+
+Therefore:
+
+* refresh the desktop mapping before execution
+* do not blindly assume Desktop 1 is always the same physical Windows desktop
+* do not permanently bind configuration to a position without considering identity
+* detect stale mappings
+* show conflicts to the user
+* require explicit remapping when identity cannot be safely determined
+
+---
+
+# 9. USER-CREATED DESKTOP SAFETY
+
+The manager must NEVER automatically:
+
+* delete user desktops
+* remove extra desktops
+* rearrange unrelated desktops
+* move unrelated application windows
+* close unrelated applications
+
+If the system has:
+
+```text
+6 existing desktops
+```
+
+and the workspace needs:
+
+```text
+4 desktops
+```
+
+preserve all 6.
+
+Do not assume that the first four are safe to control if their identities cannot be established.
+
+Provide a clear desktop mapping UI.
 
 Example:
 
 ```text
-C:\Program Files\...\application.exe
+Workspace Desktop     Windows Desktop
+
+Browser               Desktop 1
+Development           Desktop 2
+Database              Desktop 4
+API                   Desktop 5
 ```
 
-### Method 2 — Detect running application
+Allow the user to change the mapping.
 
-Show currently running applications:
+---
+
+# 10. DESKTOP MANAGEMENT
+
+Provide:
+
+* Detect Desktops
+* Refresh
+* Create Desktop
+* Open/Switch Desktop
+* Rename workspace label
+* Map workspace desktop to Windows desktop
+* Add desktop to workspace configuration
+
+Do not imply that a custom workspace name changes Windows' own desktop name unless the Windows API actually supports that behavior.
+
+The manager's custom name is its own metadata.
+
+---
+
+# 11. APPLICATION MANAGEMENT
+
+Each application must have a stable unique ID.
+
+Example:
+
+```json
+{
+  "id": "brave-browser",
+  "name": "Brave Browser",
+  "executable": "C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe",
+  "arguments": [],
+  "workspaceDesktopId": "development-browser",
+  "enabled": true
+}
+```
+
+Never use display names as the primary identity.
+
+---
+
+# 12. ADD APPLICATION
+
+The UI must provide:
 
 ```text
-Application       Process        Window
-Brave             brave.exe      Brave
-Postman           Postman.exe    Postman
-SSMS              Ssms.exe       SQL Server Management Studio
++ Add Application
 ```
 
-User can select one and click:
+Support:
+
+### Method 1 — Browse
+
+Select an `.exe` using the Windows file picker.
+
+### Method 2 — Running Applications
+
+Display currently running applications.
+
+Show:
+
+```text
+Application
+Process
+PID
+Executable
+Window
+HWND
+Desktop
+```
+
+Allow:
 
 ```text
 Add to Workspace
 ```
 
-### Method 3 — Start Menu / Shortcut discovery
+### Method 3 — Start Menu
 
-Where practical, allow discovering applications from:
+Discover applications from Start Menu shortcuts where practical.
 
-- Start Menu shortcuts
-- Desktop shortcuts
-- common installation locations
+### Method 4 — Desktop Shortcuts
 
-Do not modify shortcuts.
+Discover desktop shortcuts where practical.
 
----
+### Method 5 — Known Installation Locations
 
-# 12. APPLICATION ASSIGNMENT
+Use controlled discovery.
 
-The user must be able to change:
+Never recursively scan the entire `C:\` drive.
 
-```text
-Application: Brave
-Desktop: 1
-```
-
-to:
-
-```text
-Application: Brave
-Desktop: 3
-```
-
-without editing code.
-
-Provide a dropdown:
-
-```text
-Target Desktop
-
-[ Desktop 1 — Browser ▼ ]
-```
-
-The change must be persisted.
+Never perform expensive unrestricted searches.
 
 ---
 
-# 13. MULTIPLE APPLICATIONS PER DESKTOP
+# 13. APPLICATION DISCOVERY PRIORITY
 
-This is a mandatory feature.
+Use this resolution order:
 
-For example:
+1. User-configured executable
+2. Currently detected running executable
+3. Start Menu shortcut
+4. Desktop shortcut
+5. Known installation path
+6. Registry where appropriate
+7. Controlled environment-variable resolution
+8. Controlled search
+
+Do not overwrite a valid user-selected executable just because automatic discovery finds another copy.
+
+If multiple candidates exist:
 
 ```text
-Desktop 1
- ├── Brave
- ├── Chrome
- ├── Spotify
- └── File Explorer
+Multiple installations detected.
+
+1. C:\...
+2. C:\...
+3. C:\...
+
+Select preferred installation.
 ```
 
-The UI should support:
-
-```text
-[ + Add Application ]
-```
-
-at both:
-
-- workspace level
-- desktop level
-
-Adding an application must NOT overwrite existing applications.
+Remember the user's choice.
 
 ---
 
-# 14. REASSIGN APPLICATION
+# 14. APPLICATION PROFILE
 
-Provide an easy way to move an application between desktops.
-
-Example:
+Support at least:
 
 ```text
-Brave
-
-Current:
-Desktop 1
-
-Move to:
-[ Desktop 3 ▼ ]
-
-[ Save ]
+Application Name
+Executable Path
+Arguments
+Working Directory
+Target Workspace Desktop
+Enabled
+Launch Mode
+Move Existing Windows
+Window Matching Strategy
+Window Policy
+Launch Timeout
+Window Detection Timeout
+Retry Count
+Launch Delay
 ```
 
-The application should then use Desktop 3 the next time the workspace is synchronized/launched.
-
-If the application is already running, provide an optional immediate action:
+Optional:
 
 ```text
-Move currently running window now?
-[ Move Now ] [ Later ]
+Environment Variables
+Priority
+Notes
+Custom Detection Rules
 ```
 
 ---
 
-# 15. REMOVE APPLICATION
+# 15. WORKING DIRECTORY
 
-Allow removing an application from the workspace.
+Allow an optional working directory.
 
-Important:
+Validate it.
 
-Removing an application from the workspace must NOT uninstall it.
+Do not automatically create arbitrary directories.
 
-It must only remove its workspace configuration.
-
-Confirmation:
-
-```text
-Remove "Brave" from Desktop 1?
-
-This will not uninstall Brave.
-
-[ Cancel ] [ Remove ]
-```
+Do not delete directories.
 
 ---
 
-# 16. DESKTOP MANAGEMENT
+# 16. ARGUMENT SAFETY
 
-Allow the user to configure:
+Arguments must be stored separately from executable paths.
 
-```text
-Desktop Number
-Desktop Name
-Applications
-```
+Prefer a structured representation rather than shell-command strings.
 
-Example:
+Do NOT execute configuration as a shell command.
 
-```text
-Desktop 1 → Browser
-Desktop 2 → Development
-Desktop 3 → Database
-Desktop 4 → API Testing
-```
+Do NOT allow:
 
-Allow renaming desktop labels inside the application.
-
-Important:
-
-Do not assume Windows itself permanently supports arbitrary custom names unless the implementation actually provides such functionality.
-
-The custom name can simply be stored by this manager.
-
----
-
-# 17. DESKTOP COUNT
-
-Before workspace execution:
-
-1. Enumerate current Virtual Desktops.
-2. Determine current count.
-3. Compare against required desktop count.
-4. Create only the number required.
-
-Example:
-
-```text
-Existing desktops: 2
-Required desktops: 4
-
-Create:
-Desktop 3
-Desktop 4
-```
-
-If:
-
-```text
-Existing desktops: 5
-Required desktops: 4
-```
-
-DO NOT delete Desktop 5.
-
-DO NOT rearrange unrelated desktops.
-
-DO NOT destroy user-created desktops.
-
-Use the first required desktops for the configured workspace.
-
----
-
-# 18. NEVER DELETE USER DESKTOPS AUTOMATICALLY
-
-This is a critical safety requirement.
-
-The application must NEVER automatically:
-
-- delete a Virtual Desktop
-- close user applications
-- kill processes
-- uninstall software
-- modify registry settings unnecessarily
-- delete files
-- change Windows system settings
-
-The workspace manager should only create/reuse desktops and manage configured application windows.
-
----
-
-# 19. PROCESS DETECTION
-
-Before launching an application:
-
-Determine whether it is already running.
-
-Use process information such as:
-
-- executable name
-- executable path
-- process ID
-- command line where available
-
-Do not rely only on the process name.
-
-For example:
-
-```text
-brave.exe
-```
-
-may represent multiple Brave windows.
-
----
-
-# 20. WINDOW DETECTION
-
-After detecting a process, enumerate its top-level windows.
-
-Check:
-
-- HWND
-- visibility
-- title
-- process ID
-- executable
-- minimized state
-- maximized state
-
-Ignore:
-
-- invisible helper windows
-- system windows
-- child windows
-- notification-only windows
-
-Prefer the main visible application window.
-
----
-
-# 21. MULTI-WINDOW APPLICATIONS
-
-Support applications that have multiple windows.
-
-Example:
-
-```text
-Brave
- ├── Window 1
- ├── Window 2
- └── Window 3
-```
-
-Configuration should provide a window policy:
-
-### Policy A — Move all matching windows
-
-### Policy B — Move only the main window
-
-### Policy C — Ask the user
-
-### Policy D — Match by title
-
-### Policy E — Match by process
-
-Document limitations clearly.
-
----
-
-# 22. APPLICATION LAUNCH MODES
-
-Each application should support:
-
-### Launch if not running
-
-Default behavior.
-
-### Always launch new instance
-
-Only when supported safely.
-
-### Reuse existing instance
-
-Prefer this for applications such as browsers where appropriate.
-
-### Do not launch
-
-Only move an already-running window.
-
-Example:
-
-```text
-Brave
-Launch behavior:
-[ Reuse existing / Launch if missing ]
-```
-
----
-
-# 23. STARTUP SEQUENCE
-
-Do not launch every application simultaneously.
-
-Use controlled sequencing.
-
-Example:
-
-```text
-1. Ensure desktops exist
-2. Launch Desktop 1 applications
-3. Wait for windows
-4. Move windows
-5. Launch Desktop 2 applications
-6. Wait for windows
-7. Move windows
-8. Continue...
-```
-
-Allow configurable launch delays.
-
-Example:
-
-```text
-Default delay: 1 second
-Window timeout: 15 seconds
-```
-
-Do not use unnecessarily long fixed sleeps.
-
-Prefer event/state polling.
-
----
-
-# 24. WINDOW READY DETECTION
-
-Do not assume:
-
-```text
-Process started = Window ready
-```
-
-Instead:
-
-1. Start process.
-2. Poll for process.
-3. Poll for main window.
-4. Verify HWND.
-5. Verify window visibility.
-6. Attempt desktop assignment.
-7. Verify assignment if API allows verification.
-
-Use configurable timeout.
-
-Example:
-
-```text
-Window timeout: 15 seconds
-Polling interval: 250 ms
-```
-
----
-
-# 25. DESKTOP ASSIGNMENT
-
-Prefer direct Windows API/library integration.
-
-Do NOT make keyboard automation the primary mechanism.
-
-Avoid depending on:
-
-```text
-Win + Ctrl + D
-Win + Ctrl + Left
-Win + Ctrl + Right
-```
-
-as the main implementation.
-
-Keyboard shortcuts may be used only as a documented fallback when direct API functionality is unavailable.
-
-If a fallback is used:
-
-- detect focus
-- restore focus
-- verify current desktop
-- perform action
-- verify result
-- recover if action failed
-
-Never assume simulated keypresses succeeded.
-
----
-
-# 26. DESKTOP ASSIGNMENT VERIFICATION
-
-After moving a window:
-
-Verify that it actually belongs to the intended Virtual Desktop when possible.
-
-Example log:
-
-```text
-[INFO] Moving Brave → Desktop 1
-[SUCCESS] Brave assigned to Desktop 1
-```
-
-If verification is impossible due to Windows API limitations:
-
-```text
-[WARNING] Window move requested, but Windows API does not expose reliable verification.
-```
-
-Never report success when the operation was not verified.
-
----
-
-# 27. SPECIAL APPLICATION CONFIGURATION
-
-Create default detection logic for:
-
-## Brave
-
-Search common locations such as:
-
-```text
-%ProgramFiles%\BraveSoftware\Brave-Browser\Application\brave.exe
-%ProgramFiles(x86)%\BraveSoftware\Brave-Browser\Application\brave.exe
-%LocalAppData%\BraveSoftware\Brave-Browser\Application\brave.exe
-```
-
-Also support user-selected paths.
-
----
-
-# 28. GOOGLE ANTIGRAVITY
-
-Do NOT assume that Antigravity is a web page.
-
-Attempt to detect the actual installed application/shortcut.
-
-Possible sources:
-
-- Start Menu shortcuts
-- user-selected executable
-- known installation locations
-- currently running process
-
-If it cannot be detected automatically:
-
-Display:
-
-```text
-Antigravity was not detected.
-
-[Browse for Application]
-[Select Running Application]
-```
-
-Store the selected executable path.
-
-Do not hard-code a random web URL as a replacement for the installed application.
-
----
-
-# 29. SQL SERVER MANAGEMENT STUDIO
-
-Attempt to dynamically locate SSMS.
-
-Support installation/version variations.
-
-Search:
-
-- Program Files
-- Program Files (x86)
-- Start Menu shortcuts
-- registry where appropriate
-- user-configured executable path
-
-Do not assume a single SSMS version.
-
-The user may have SSMS 20, 21, 22, or another supported version.
-
----
-
-# 30. POSTMAN
-
-Support versioned installations.
-
-Search locations such as:
-
-```text
-%LocalAppData%\Postman\
-```
-
-Detect:
-
-```text
-app-*\Postman.exe
-```
-
-Select the newest valid version where appropriate.
-
-Also support manually selected paths.
-
----
-
-# 31. APPLICATION PROFILE
-
-Each application should have a configuration object similar to:
-
-```json
-{
-  "id": "brave",
-  "name": "Brave Browser",
-  "executable": "C:\\Path\\brave.exe",
-  "arguments": "",
-  "desktop": 1,
-  "enabled": true,
-  "launchIfMissing": true,
-  "moveExistingWindow": true,
-  "windowPolicy": "main",
-  "launchDelayMs": 1000,
-  "windowTimeoutMs": 15000
-}
-```
-
-Use a unique stable ID rather than relying only on display names.
-
----
-
-# 32. PERSISTENT CONFIGURATION
-
-Configuration must survive application restarts.
-
-Store configuration in an appropriate user-level location.
-
-For example:
-
-```text
-%APPDATA%\VirtualDesktopWorkspaceManager\
-```
-
-Possible files:
-
-```text
-config.json
-workspace.json
-logs\
-backups\
-```
-
-Do not store user configuration inside the application's installation directory if avoidable.
-
----
-
-# 33. CONFIGURATION VERSIONING
-
-Include a configuration schema version.
-
-Example:
-
-```json
-{
-  "schemaVersion": 1,
-  ...
-}
-```
-
-Future versions must be able to migrate older configuration where possible.
-
-Never silently discard user configuration.
-
----
-
-# 34. CONFIGURATION BACKUPS
-
-Before modifying configuration:
-
-Create a backup when appropriate.
-
-Example:
-
-```text
-workspace.json
-workspace.backup.json
-```
-
-Do not create hundreds of backups.
-
-Use a reasonable retention strategy.
-
----
-
-# 35. IMPORT / EXPORT
-
-The UI must support:
-
-```text
-Export Workspace
-Import Workspace
-```
-
-Export should produce a human-readable JSON configuration.
-
-Example:
-
-```text
-my-development-workspace.json
-```
-
-Import must validate the file before replacing the current configuration.
-
-Never overwrite configuration without validation.
-
----
-
-# 36. DRY-RUN MODE
-
-Provide:
-
-```text
-Dry Run
-```
-
-Before making changes.
-
-Dry run should show:
-
-```text
-Existing desktops: 2
-Required desktops: 4
-Would create: Desktop 3, Desktop 4
-
-Desktop 1:
-✓ Brave detected
-
-Desktop 2:
-✓ Antigravity detected
-
-Desktop 3:
-✓ SSMS detected
-
-Desktop 4:
-⚠ Postman not detected
-```
-
-Dry run must not:
-
-- create desktops
-- launch applications
-- move windows
-- terminate processes
-
----
-
-# 37. SAFE EXECUTION MODE
-
-Normal execution should require an explicit user action:
-
-```text
-[ Launch Workspace ]
-```
-
-Do not automatically execute the workspace merely because the UI opens.
-
-Provide an optional setting:
-
-```text
-Launch workspace when Windows starts
-```
-
-This setting must default to:
-
-```text
-OFF
-```
-
-If enabled, explain that Windows startup integration will be created.
-
-Do not silently create startup tasks.
-
----
-
-# 38. STARTUP OPTION
-
-If the user enables startup:
-
-Provide a clear option such as:
-
-```text
-☐ Start Workspace Manager with Windows
-☐ Automatically launch configured workspace
-```
-
-These must be separate settings.
-
-Possible configurations:
-
-```text
-Manager starts only
-Manager starts + workspace automatically launches
-```
-
-Default:
-
-```text
-Both OFF
-```
-
----
-
-# 39. LOGGING
-
-Create structured logs.
-
-Example:
-
-```text
-2026-10-06 14:30:01 [INFO] Workspace launch started
-2026-10-06 14:30:02 [INFO] Detected 2 Virtual Desktops
-2026-10-06 14:30:02 [INFO] Creating Desktop 3
-2026-10-06 14:30:03 [SUCCESS] Desktop 3 created
-2026-10-06 14:30:03 [INFO] Creating Desktop 4
-2026-10-06 14:30:04 [SUCCESS] Desktop 4 created
-2026-10-06 14:30:05 [INFO] Launching Brave
-2026-10-06 14:30:07 [SUCCESS] Brave window detected
-2026-10-06 14:30:07 [SUCCESS] Brave assigned to Desktop 1
-```
-
-Use:
-
-- INFO
-- SUCCESS
-- WARNING
-- ERROR
-- DEBUG
-
----
-
-# 40. LOG UI
-
-The UI must include a live log panel.
-
-Features:
-
-- clear logs
-- copy logs
-- open log folder
-- filter by level
-- search logs
-- export diagnostics
-
-Example filters:
-
-```text
-[ALL] [INFO] [SUCCESS] [WARNING] [ERROR]
-```
-
----
-
-# 41. ERROR HANDLING
-
-Never allow one application failure to terminate the entire workspace operation.
-
-Example:
-
-```text
-Brave      ✓
-Antigravity ✓
-SSMS       ✓
-Postman    ✗
-```
-
-The manager should continue.
-
-At the end:
-
-```text
-Workspace completed with warnings.
-
-Successful: 3
-Failed: 1
-Skipped: 0
-```
-
----
-
-# 42. MISSING APPLICATION
-
-If an application is unavailable:
-
-```text
-Postman was not found.
-
-Search locations:
-- C:\Users\...\AppData\Local\Postman
-- configured path
-
-What would you like to do?
-
-[Browse]
-[Skip]
-[Remove From Workspace]
-```
-
-Do not uninstall anything.
-
----
-
-# 43. PERMISSION HANDLING
-
-Do NOT automatically elevate to Administrator.
-
-The application should work with normal user permissions whenever possible.
-
-If an operation requires elevation:
-
-Explain exactly why.
-
-Example:
-
-```text
-Administrator privileges are not required for normal workspace operations.
-
-This operation requires elevated permissions because...
-```
-
-Never silently run:
-
-```text
-RunAs Administrator
-```
-
----
-
-# 44. COMMAND EXECUTION SAFETY
-
-Avoid unsafe command construction.
-
-Do not use:
-
-- encoded PowerShell commands
-- downloaded scripts
-- remote code execution
-- shell injection-prone string concatenation
-- hidden background commands
-- arbitrary command execution from configuration
-
-Executable paths and arguments must be validated.
+* arbitrary PowerShell expressions
+* shell pipelines
+* encoded commands
+* command substitution
+* downloaded commands
+* remote execution
 
 Use safe process creation APIs.
 
----
+Do not use:
 
-# 45. USER DATA SAFETY
+```text
+shell=True
+```
 
-The application must NOT modify or delete:
+unless there is an explicitly justified and isolated case.
 
-- Documents
-- Downloads
-- Desktop files
-- source code
-- Git repositories
-- Docker data
-- SQL databases
-- browser profiles
-- application data
+Prefer:
 
-unless explicitly required by a future feature and explicitly confirmed.
+```text
+executable + argument list
+```
 
-The launcher should only manage:
-
-- Virtual Desktop state
-- configured application processes/windows
-- its own configuration
-- its own logs
+rather than concatenated shell commands.
 
 ---
 
-# 46. IDE / DEVELOPMENT ENVIRONMENT SAFETY
+# 17. ENVIRONMENT VARIABLES
 
-The default workspace must NOT interfere with:
-
-- Git
-- Docker
-- Visual Studio
-- VS Code
-- Node.js
-- Python
-- SQL Server
-- Postman
-- Brave
-- development repositories
-
-The application should never terminate development processes automatically.
-
----
-
-# 47. DUPLICATE PREVENTION
-
-The manager itself should not launch duplicate copies of the same application unnecessarily.
-
-Example:
-
-```text
-Brave already running.
-Reusing existing Brave window.
-```
-
-However, respect application-specific behavior.
-
-Some applications support multiple windows/instances.
-
-Configuration must control this.
-
----
-
-# 48. IDEMPOTENCY
-
-Running:
-
-```text
-Launch Workspace
-```
-
-multiple times must not produce:
-
-```text
-Brave
-Brave
-Brave
-Brave
-```
-
-or duplicate Virtual Desktops.
-
-Instead:
-
-```text
-Existing desktop detected.
-Existing application detected.
-Existing window detected.
-Synchronizing state.
-```
-
----
-
-# 49. WORKSPACE SYNCHRONIZATION
-
-Add a dedicated:
-
-```text
-Sync Workspace
-```
-
-operation.
-
-It should compare:
-
-### Desired state
-
-versus
-
-### Actual state
-
-Example:
-
-```text
-Desired:
-
-Brave → Desktop 1
-Antigravity → Desktop 2
-SSMS → Desktop 3
-Postman → Desktop 4
-
-Actual:
-
-Brave → Desktop 3
-Antigravity → Desktop 2
-SSMS → Desktop 3
-Postman → Not Running
-```
-
-Then:
-
-```text
-Brave → move to Desktop 1
-Postman → launch
-```
-
-This should be the primary repair mechanism.
-
----
-
-# 50. "LAUNCH WORKSPACE" VS "SYNC WORKSPACE"
-
-Keep these concepts separate.
-
-### Launch Workspace
-
-Ensure applications are launched and assigned.
-
-### Sync Workspace
-
-Do not necessarily launch missing applications unless configuration says so.
-
-Instead reconcile the current state with the desired state.
-
-Document this behavior.
-
----
-
-# 51. CURRENT DESKTOP
-
-Display:
-
-```text
-Current Desktop: Desktop 2 — Development
-```
-
-Update it when the user changes Virtual Desktops outside the manager, if practical.
-
-Provide:
-
-```text
-Refresh
-```
-
-fallback.
-
----
-
-# 52. OPEN DESKTOP
-
-Each desktop card should have:
-
-```text
-[ Open Desktop ]
-```
-
-Clicking it should switch to that Virtual Desktop.
-
-Do not launch any applications when merely opening a desktop.
-
----
-
-# 53. ADD DESKTOP
-
-If practical, provide:
-
-```text
-[ + Add Desktop ]
-```
-
-But distinguish between:
-
-### Physical Windows Virtual Desktop
-
-and
-
-### Workspace configuration.
-
-If the user adds a new Windows Virtual Desktop manually, the manager should detect it.
-
-If the manager creates one, it should track it where possible.
-
----
-
-# 54. DESKTOP ORDER
-
-Do not assume desktop IDs are always:
-
-```text
-1, 2, 3, 4
-```
-
-Internally use stable identifiers when the Windows API exposes them.
-
-Display:
-
-```text
-Desktop 1
-Desktop 2
-Desktop 3
-Desktop 4
-```
-
-as user-friendly positions.
-
-If Windows changes ordering/IDs, refresh the mapping.
-
----
-
-# 55. WINDOW TITLE MATCHING
-
-Some applications may have dynamic titles.
-
-Support configurable matching:
-
-```text
-Process name
-Executable path
-Window title contains
-Window title regex
-HWND
-```
-
-Default to process/executable-based matching.
-
-Use title matching only when necessary.
-
----
-
-# 56. APPLICATION ARGUMENTS
-
-Allow optional launch arguments.
-
-Example:
-
-```text
-Executable:
-brave.exe
-
-Arguments:
---profile-directory="Default"
-```
-
-Arguments must be stored separately from the executable path.
-
-Validate them safely.
-
-Do not allow arbitrary shell expressions.
-
----
-
-# 57. ENVIRONMENT VARIABLES
-
-Support environment-variable expansion where appropriate:
+Allow controlled expansion of variables such as:
 
 ```text
 %ProgramFiles%
@@ -1556,83 +651,673 @@ Support environment-variable expansion where appropriate:
 %SystemDrive%
 ```
 
-Do not blindly expand arbitrary values.
+Do not blindly execute environment variables as commands.
 
 ---
 
-# 58. PATH DISCOVERY
+# 18. APPLICATION LAUNCH MODES
 
-Use a layered resolution strategy:
+Support:
 
-1. User-configured executable
-2. Currently running process
-3. Start Menu shortcut
-4. Registry where appropriate
-5. Known installation directories
-6. Environment variables
-7. Controlled filesystem search
+### Launch if missing
 
-Do not recursively scan the entire C:\ drive.
+Launch only if the application is not already available.
 
-Avoid expensive searches.
+### Reuse existing
 
----
+Prefer an existing compatible process/window.
 
-# 59. UI SETTINGS
+### Always launch
 
-Create a Settings page.
+Only if explicitly configured.
 
-Settings should include:
+### Do not launch
 
-### General
+Only detect/move existing windows.
 
-- Start with Windows
-- Automatically launch workspace
-- Confirm before workspace launch
-- Minimize to tray
-- Start minimized
+### Ask
 
-### Execution
+Prompt the user when execution begins.
 
-- Window timeout
-- Polling interval
-- Launch delay
-- Retry count
+Default:
 
-### Logging
+```text
+Launch if missing
+```
 
-- Log level
-- Log retention
-- Open log directory
-
-### Safety
-
-- Require confirmation
-- Dry-run default
-- Never kill processes
+but user confirmation must still control actual workspace execution.
 
 ---
 
-# 60. SYSTEM TRAY
+# 19. DUPLICATE PREVENTION
 
-If implementing a system tray:
+The application must avoid unnecessary duplicate instances.
+
+Before launching:
+
+1. Find matching processes.
+2. Determine executable path.
+3. Determine command line where available.
+4. Enumerate windows.
+5. Match configured application.
+6. Determine whether an existing compatible window is usable.
+
+Do NOT simply do:
+
+```text
+process name == brave.exe
+```
+
+because multiple installations/processes may exist.
+
+---
+
+# 20. APPLICATION MATCHING
+
+Provide multiple matching strategies:
+
+### Executable path
+
+Exact executable path.
+
+### Executable name
+
+Example:
+
+```text
+brave.exe
+```
+
+### Process ID
+
+Only for temporary runtime identification, never persistent identity.
+
+### Process name + path
+
+Preferred fallback.
+
+### Window title
+
+Contains.
+
+### Window title regex
+
+Optional.
+
+### Class name
+
+Optional.
+
+### HWND
+
+Only as a runtime identity because HWNDs can change.
+
+### Custom matching rule
+
+Optional.
+
+Use a confidence score when multiple windows match.
+
+Example:
+
+```text
+Executable path match       +50
+Executable name match       +20
+Process match               +15
+Window title match          +10
+Class match                  +5
+```
+
+If confidence is too low:
+
+```text
+⚠ Multiple possible windows detected.
+
+Select the window to manage.
+```
+
+Never move a questionable window automatically.
+
+---
+
+# 21. WINDOW DETECTION
+
+A process is NOT the same thing as a window.
+
+One application may have:
+
+* multiple processes
+* multiple windows
+* child windows
+* helper processes
+* splash screens
+* background processes
+* notification windows
+
+Enumerate top-level windows.
+
+Inspect:
+
+* HWND
+* PID
+* executable
+* process path
+* title
+* class name
+* visibility
+* minimized state
+* maximized state
+* owner window
+* parent/child relationship
+* cloaked state where available
+
+Ignore:
+
+* invisible windows
+* child windows
+* helper windows
+* notification-only windows
+* system windows
+* irrelevant launcher windows
+
+---
+
+# 22. MULTI-WINDOW POLICY
+
+Support:
+
+1. Move all matching windows
+2. Move main window
+3. Move selected window
+4. Ask user
+5. Match by title
+6. Match by process
+7. Match by configured rule
+
+Example:
+
+```text
+Brave
+3 matching windows found.
+
+○ Move all
+○ Move main window
+○ Select specific window
+○ Do nothing
+```
+
+Never assume every application's window architecture is identical.
+
+---
+
+# 23. WINDOW READY DETECTION
+
+Never assume:
+
+```text
+Process started = Window ready
+```
+
+Instead:
+
+1. Start process.
+2. Poll for process.
+3. Enumerate windows.
+4. Match candidate window.
+5. Verify visibility/usability.
+6. Attempt desktop assignment.
+7. Verify assignment if possible.
+
+Use:
+
+```text
+poll interval: configurable
+window timeout: configurable
+```
+
+Default example:
+
+```text
+Polling: 250 ms
+Window timeout: 15 seconds
+```
+
+Do not use unnecessarily long fixed sleeps.
+
+Prefer state-based polling.
+
+---
+
+# 24. WINDOW LIFECYCLE RACE CONDITIONS
+
+Account for:
+
+* process starting slowly
+* process exiting immediately
+* splash screen appearing first
+* main window appearing later
+* HWND changing
+* window being recreated
+* application opening multiple windows
+* application becoming unresponsive
+* user manually moving the window while synchronization is running
+
+Re-check state before destructive or disruptive actions.
+
+If the user changes a window while synchronization is in progress, do not blindly override the user's action unless the user explicitly requested aggressive synchronization.
+
+---
+
+# 25. USER-CONTROLLED VS AUTOMATED MOVES
+
+The application must distinguish:
+
+```text
+Manager-initiated move
+```
+
+from:
+
+```text
+User manually moved window
+```
+
+Normal operation should NOT constantly fight the user.
+
+A synchronization operation should reconcile state only when explicitly invoked or when an explicitly enabled automation mode is active.
+
+---
+
+# 26. LAUNCH SEQUENCE
+
+Use controlled sequencing:
+
+```text
+1. Validate configuration
+2. Detect Windows capabilities
+3. Detect desktops
+4. Resolve desktop mappings
+5. Detect applications
+6. Show execution plan
+7. Create missing desktops if approved
+8. Launch applications where required
+9. Wait for windows
+10. Identify windows
+11. Move windows
+12. Verify
+13. Produce final report
+```
+
+Do not launch everything simultaneously.
+
+Applications assigned to the same desktop may be launched sequentially or concurrently only when safe and explicitly designed.
+
+---
+
+# 27. DRY RUN
+
+Dry Run is mandatory.
+
+Dry Run must perform NO real workspace modifications.
+
+It must NOT:
+
+* create desktops
+* switch desktops
+* move windows
+* launch applications
+* kill processes
+* modify startup
+* modify registry
+* modify user files
+
+Example:
+
+```text
+DRY RUN
+
+Current desktops: 3
+Required workspace desktops: 4
+
+Would create:
+Desktop 4
+
+Applications:
+
+Brave
+✓ Executable found
+✓ Existing window found
+→ Would assign to Browser desktop
+
+Antigravity
+✓ Executable found
+✗ No window
+→ Would launch
+
+SSMS
+✓ Existing window
+→ Would move
+
+Postman
+✗ Executable not found
+→ Would skip
+```
+
+---
+
+# 28. EXECUTION PLAN PREVIEW
+
+Before a real workspace operation, show a plan.
+
+Example:
+
+```text
+Workspace Execution Plan
+
+Desktop changes
++ Create Desktop 4
+
+Applications
+✓ Reuse Brave
+→ Move Brave → Browser
+→ Launch Antigravity
+→ Move SSMS → Database
+⚠ Postman unavailable
+
+No applications will be uninstalled.
+No processes will be terminated.
+No files will be deleted.
+
+[Cancel] [Run]
+```
+
+This should be especially visible on the first execution.
+
+---
+
+# 29. LAUNCH WORKSPACE VS SYNC WORKSPACE
+
+These are separate operations.
+
+## Launch Workspace
+
+Ensures configured applications are launched/reused and assigned.
+
+## Sync Workspace
+
+Compares:
+
+```text
+Desired State
+```
+
+against:
+
+```text
+Actual State
+```
+
+and repairs only configured differences.
+
+Define exact behavior in documentation.
+
+Do not make Sync unexpectedly launch applications unless the application configuration explicitly permits it.
+
+---
+
+# 30. DESIRED STATE / ACTUAL STATE MODEL
+
+Represent workspace state explicitly.
+
+Example:
+
+```text
+Desired:
+
+Browser
+  Brave
+
+Development
+  Antigravity
+  VS Code
+
+Database
+  SSMS
+
+API
+  Postman
+```
+
+Actual:
+
+```text
+Browser
+  Brave → wrong desktop
+
+Development
+  Antigravity
+
+Database
+  SSMS
+
+API
+  Postman → not running
+```
+
+The synchronization engine should produce:
+
+```text
+Plan:
+
+Move Brave
+Launch Postman
+Verify Antigravity
+No action for SSMS
+```
+
+The plan must be visible in logs and optionally in the UI.
+
+---
+
+# 31. OPERATION PLANNER
+
+Separate:
+
+```text
+Discovery
+```
+
+from:
+
+```text
+Planning
+```
+
+from:
+
+```text
+Execution
+```
+
+from:
+
+```text
+Verification
+```
+
+Architecture:
+
+```text
+Actual State
+     ↓
+Desired State
+     ↓
+Planner
+     ↓
+Execution Plan
+     ↓
+User Approval
+     ↓
+Executor
+     ↓
+Verification
+     ↓
+Final State
+```
+
+This prevents arbitrary actions from being executed directly from UI callbacks.
+
+---
+
+# 32. OPERATION SNAPSHOT
+
+Before execution, create an in-memory operation snapshot containing:
+
+* current desktop IDs
+* current desktop mapping
+* configured applications
+* detected processes
+* detected windows
+* relevant window desktop IDs
+* planned actions
+
+Do not treat the snapshot as permanent truth.
+
+Revalidate important state before each action.
+
+---
+
+# 33. TRANSACTION-LIKE EXECUTION
+
+Workspace execution is NOT a true database transaction.
+
+Do not claim that all Windows operations can be rolled back.
+
+Instead use:
+
+```text
+Plan
+→ Execute
+→ Verify
+→ Recover what can safely be recovered
+→ Report
+```
+
+If a window move succeeds and a later application fails, do NOT automatically move the successful window back unless the user has explicitly configured rollback behavior.
+
+Never make rollback more dangerous than the original operation.
+
+---
+
+# 34. CANCELLATION
 
 Provide:
 
 ```text
-Open Manager
-Launch Workspace
-Sync Workspace
-Pause Automation
-View Logs
-Exit
+Stop / Cancel
 ```
 
-The tray must NOT silently execute workspace operations.
+Cancellation should:
+
+* stop future actions
+* stop waiting loops
+* prevent new application launches
+* prevent new window moves
+* allow the current non-interruptible API call to finish if necessary
+
+It must NOT:
+
+* kill applications
+* terminate processes
+* delete desktops
+* forcibly undo already completed actions
+
+The final report must say:
+
+```text
+Operation cancelled.
+
+Completed:
+3
+
+Skipped:
+4
+
+Not executed:
+2
+```
 
 ---
 
-# 61. PAUSE / DISABLE
+# 35. EMERGENCY STOP
+
+Provide a clearly visible:
+
+```text
+STOP
+```
+
+button while operations are running.
+
+Its purpose is:
+
+```text
+Prevent additional actions.
+```
+
+It must NOT kill processes.
+
+It must NOT close applications.
+
+It must NOT delete desktops.
+
+---
+
+# 36. CONCURRENCY
+
+Only one workspace operation may execute at a time.
+
+Prevent:
+
+```text
+Launch Workspace
++
+Sync Workspace
+```
+
+from running simultaneously.
+
+If another operation is requested:
+
+```text
+Workspace operation already running.
+
+Please wait or cancel the current operation.
+```
+
+Disable conflicting UI actions while execution is active.
+
+---
+
+# 37. SINGLE INSTANCE
+
+The manager itself should normally run as one instance.
+
+If a second instance starts:
+
+```text
+Virtual Desktop Workspace Manager is already running.
+```
+
+Optionally bring the existing window to the foreground.
+
+Do not create duplicate background managers.
+
+Do not create duplicate tray processes.
+
+---
+
+# 38. AUTOMATION ENABLE/DISABLE
 
 Provide:
 
@@ -1640,377 +1325,88 @@ Provide:
 Automation Enabled: ON/OFF
 ```
 
-When disabled:
+When OFF:
 
-- Do not launch applications
-- Do not move windows
-- Do not modify desktop state
+* do not launch applications
+* do not move windows
+* do not create desktops
+* do not modify desktop state
 
-The UI itself can still be used.
+The UI may still:
+
+* inspect
+* display
+* validate
+* edit configuration
+* generate diagnostics
+* run dry-run
 
 ---
 
-# 62. EMERGENCY STOP
+# 39. STARTUP BEHAVIOR
 
-Provide:
+Startup must be completely opt-in.
+
+Provide separate options:
 
 ```text
-STOP
+☐ Start Manager with Windows
+
+☐ Automatically launch workspace at Windows login
 ```
 
-This should stop the current workspace operation where possible.
-
-It must NOT kill applications.
-
-It simply prevents additional actions from being performed.
-
----
-
-# 63. TRANSACTION-LIKE EXECUTION
-
-Treat workspace execution as a sequence of operations.
-
-Example:
+Both default:
 
 ```text
-Phase 1:
-Detect
-
-Phase 2:
-Prepare desktops
-
-Phase 3:
-Launch applications
-
-Phase 4:
-Wait for windows
-
-Phase 5:
-Assign windows
-
-Phase 6:
-Verify
-
-Phase 7:
-Report
+OFF
 ```
 
-If something fails, continue safely where possible.
+These are NOT the same setting.
 
----
-
-# 64. RETRY POLICY
-
-For temporary failures:
+Possible configurations:
 
 ```text
-Attempt 1
-Attempt 2
-Attempt 3
+Manager only
+Manager + workspace
+Nothing
 ```
 
-Use exponential or bounded delays where appropriate.
+Do not silently create:
 
-Do not retry indefinitely.
+* Startup folder entries
+* Registry Run entries
+* Scheduled Tasks
+* services
+
+If startup is enabled, explain exactly what is being created.
+
+Provide a UI option to disable/remove it.
 
 ---
 
-# 65. CRASH RECOVERY
+# 40. SYSTEM TRAY
 
-If the manager crashes while performing an operation:
-
-It must not leave behind dangerous processes or modify unrelated system state.
-
-On next startup:
+If implemented, support:
 
 ```text
-Previous workspace operation may not have completed.
-
-[Review]
-[Sync Workspace]
-[Ignore]
+Open Manager
+Launch Workspace
+Sync Workspace
+Pause Automation
+View Logs
+Settings
+Exit
 ```
 
----
+Tray actions must follow the same confirmation and safety rules as the main UI.
 
-# 66. CONFIGURATION VALIDATION
-
-Before execution validate:
-
-- desktop number exists
-- executable path exists where required
-- configuration IDs are unique
-- no duplicate application IDs
-- invalid arguments
-- invalid timeout values
-- unsupported configurations
-
-Show errors before execution.
+Do not let the tray silently execute dangerous operations.
 
 ---
 
-# 67. UI VALIDATION
+# 41. FIRST-RUN WIZARD
 
-The UI should immediately show:
-
-```text
-✓ Valid executable
-⚠ Executable not found
-✓ Desktop assignment valid
-⚠ Window matching rule invalid
-```
-
----
-
-# 68. TESTING
-
-Create tests for:
-
-### Configuration
-
-- load config
-- save config
-- malformed config
-- migration
-- backup
-
-### Application discovery
-
-- valid path
-- missing path
-- versioned Postman
-- SSMS detection
-
-### Process handling
-
-- process running
-- process missing
-- multiple processes
-
-### Window handling
-
-- visible window
-- hidden window
-- minimized window
-- multiple windows
-
-### Workspace logic
-
-- 1 desktop
-- 2 desktops
-- 4 desktops
-- more than 4 desktops
-- multiple apps on one desktop
-- duplicate launch
-- missing application
-
----
-
-# 69. MOCK / DRY-RUN TESTING
-
-The tests must NOT manipulate the user's real Virtual Desktops.
-
-Create abstractions/interfaces so that desktop operations can be mocked.
-
-For example:
-
-```text
-VirtualDesktopProvider
-WindowProvider
-ProcessProvider
-ApplicationLauncher
-ConfigurationStore
-```
-
-Then provide mock implementations for automated tests.
-
-This is extremely important.
-
----
-
-# 70. ARCHITECTURE
-
-Use a clean architecture.
-
-Suggested structure:
-
-```text
-VirtualDesktopWorkspaceManager/
-│
-├── app/
-│   ├── main
-│   ├── ui/
-│   ├── core/
-│   ├── services/
-│   ├── models/
-│   ├── providers/
-│   ├── discovery/
-│   ├── configuration/
-│   └── logging/
-│
-├── tests/
-│
-├── config/
-│
-├── docs/
-│
-├── logs/
-│
-└── README.md
-```
-
-Separate:
-
-```text
-UI
-Business Logic
-Windows API Integration
-Application Discovery
-Configuration
-Logging
-```
-
-Do not place everything in one giant script.
-
----
-
-# 71. WINDOWS API ABSTRACTION
-
-Create an abstraction layer around Windows-specific functionality.
-
-For example:
-
-```text
-IVirtualDesktopProvider
-IWindowProvider
-IProcessProvider
-IApplicationLauncher
-```
-
-The rest of the application should not directly depend on low-level Windows API calls.
-
-This makes testing and future maintenance easier.
-
----
-
-# 72. NO HARD-CODED APPLICATION PATHS
-
-Default paths may be used for discovery, but they must not be mandatory.
-
-Users must be able to configure any application.
-
-Example:
-
-```text
-Application:
-Docker Desktop
-
-Executable:
-C:\Program Files\Docker\Docker\Docker Desktop.exe
-
-Desktop:
-2
-```
-
----
-
-# 73. APPLICATION TEMPLATES
-
-Provide optional templates for common applications:
-
-- Brave
-- Chrome
-- Edge
-- Firefox
-- VS Code
-- Visual Studio
-- Antigravity
-- SSMS
-- Postman
-- Docker Desktop
-- Git Bash
-- Windows Terminal
-- File Explorer
-
-Templates should only assist discovery.
-
-They must not install anything.
-
----
-
-# 74. DOCKER / DEVELOPMENT SAFETY
-
-Do not automatically manipulate Docker Desktop's internal windows unless explicitly configured.
-
-Do not:
-
-- stop Docker
-- restart Docker
-- modify Docker data
-- modify WSL
-- modify containers
-
-The workspace manager only controls the application window.
-
----
-
-# 75. SQL SERVER SAFETY
-
-Do not:
-
-- stop SQL Server
-- restart SQL Server
-- change SQL configuration
-- modify databases
-
-SSMS should be treated as an ordinary application window.
-
----
-
-# 76. BROWSER SAFETY
-
-Do not modify:
-
-- browser profile
-- cookies
-- saved passwords
-- extensions
-- history
-
-The manager should only launch/move the browser window.
-
----
-
-# 77. USER CONFIRMATION
-
-Before the first real execution, show:
-
-```text
-Workspace Execution
-
-The following actions will occur:
-
-✓ Create missing Virtual Desktops
-✓ Launch configured applications
-✓ Move application windows
-
-No applications will be uninstalled.
-No processes will be terminated.
-
-Continue?
-
-[Cancel] [Run Workspace]
-```
-
-Allow the user to disable this confirmation later in Settings.
-
----
-
-# 78. FIRST-RUN EXPERIENCE
-
-On first launch:
-
-Show a setup wizard.
+First launch should provide:
 
 ### Step 1
 
@@ -2018,169 +1414,658 @@ Welcome
 
 ### Step 2
 
-Detect Virtual Desktops
+Detect Windows capabilities
 
 ### Step 3
 
-Configure desktops
+Detect Virtual Desktops
 
 ### Step 4
 
-Detect applications
+Choose workspace mapping
 
 ### Step 5
 
-Assign applications
+Discover applications
 
 ### Step 6
 
-Review
+Assign applications
 
 ### Step 7
 
-Save configuration
+Configure launch behavior
 
 ### Step 8
 
-Do NOT execute automatically.
+Review execution plan
 
-Show:
+### Step 9
+
+Save configuration
+
+### Step 10
+
+Finish
+
+Do NOT execute the workspace.
+
+Final message:
 
 ```text
 Workspace configuration completed.
 
-When you are ready:
+Nothing has been launched or moved.
+
+When ready:
 
 [Launch Workspace]
 ```
 
 ---
 
-# 79. EXAMPLE DEFAULT CONFIGURATION
+# 42. UI STRUCTURE
 
-Create the initial workspace:
+Create a professional desktop application.
+
+Recommended navigation:
 
 ```text
-Desktop 1 — Browser
- └── Brave
+Dashboard
+Workspaces
+Applications
+Virtual Desktops
+Execution
+Logs
+Diagnostics
+Settings
+About
+```
 
+---
+
+# 43. DASHBOARD
+
+Show:
+
+```text
+Virtual Desktop Workspace Manager
+
+Current Desktop:
 Desktop 2 — Development
- └── Google Antigravity
 
-Desktop 3 — Database
- └── SQL Server Management Studio
-
-Desktop 4 — API
- └── Postman
-```
-
-The user must be able to change everything.
-
----
-
-# 80. ADDING NEW APPLICATION LATER
-
-This must be easy.
-
-Example:
-
-User opens:
-
-```text
-Desktop 2 → Add Application
-```
-
-Selects:
-
-```text
-Visual Studio Code
-```
-
-Then:
-
-```text
-Desktop 2
- ├── Antigravity
- └── Visual Studio Code
-```
-
-Save.
-
-No source-code modification should be required.
-
----
-
-# 81. MOVING AN APPLICATION LATER
-
-Example:
-
-```text
-Desktop 1
- └── Brave
-```
-
-User changes:
-
-```text
-Brave → Desktop 4
-```
-
-After saving:
-
-```text
-Desktop 4
- ├── Postman
- └── Brave
-```
-
-The configuration should persist.
-
----
-
-# 82. WORKSPACE PROFILES
-
-Implement multiple workspace profiles if practical.
-
-Example:
-
-```text
-Work
+Workspace:
 Development
+
+Status:
+✓ Ready
+
+Virtual Desktops:
+4
+
+Configured Applications:
+7
+
+Running:
+5
+
+Missing:
+1
+
+Warnings:
+1
+
+Last Sync:
+2026-10-06 14:30
+```
+
+Buttons:
+
+```text
+Launch Workspace
+Sync Workspace
+Dry Run
+Refresh
+Stop
+Diagnostics
+Settings
+Logs
+```
+
+---
+
+# 44. DESKTOP CARDS
+
+Each desktop card should show:
+
+* desktop number
+* custom name
+* Windows desktop identity/status
+* current indicator
+* assigned applications
+* running status
+* missing applications
+* warning state
+
+Actions:
+
+```text
+Open
+Edit
+Add Application
+Sync
+```
+
+Example:
+
+```text
+┌─────────────────────────────┐
+│ Desktop 2                   │
+│ Development                 │
+│                             │
+│ ✓ Antigravity               │
+│ ✓ VS Code                   │
+│ ✓ Git Bash                  │
+│                             │
+│ [Open] [Edit] [+ Add App]  │
+└─────────────────────────────┘
+```
+
+---
+
+# 45. APPLICATION LIST
+
+Provide:
+
+```text
+Application
+Desktop
+Executable
+Status
+Windows
+Launch Mode
+Enabled
+```
+
+Actions:
+
+```text
+Edit
+Move
+Open
+Detect
+Remove
+```
+
+Provide search/filtering.
+
+---
+
+# 46. DRAG-AND-DROP ASSIGNMENT
+
+If practical, allow:
+
+```text
+Drag Brave
+from Desktop 1
+to Desktop 4
+```
+
+The UI must ask:
+
+```text
+Update workspace assignment?
+
+This changes where Brave will be managed during future workspace operations.
+
+[Cancel] [Save]
+```
+
+If Brave is currently running:
+
+```text
+Move currently running window now?
+
+[Later] [Move Now]
+```
+
+Never move the running window merely because the user dragged a configuration card unless the user explicitly confirms.
+
+---
+
+# 47. DESKTOP EDITOR
+
+Allow:
+
+```text
+Name
+Mapped Windows Desktop
+Description
+Applications
+```
+
+Do not expose fake desktop names as if they were Windows system names.
+
+---
+
+# 48. APPLICATION EDITOR
+
+Include:
+
+```text
+Application Name
+Executable
+Browse
+Detect
+Arguments
+Working Directory
+Desktop
+Enabled
+
+Launch Mode
+Window Policy
+Matching Strategy
+
+Launch Delay
+Window Timeout
+Retry Count
+```
+
+Provide validation indicators:
+
+```text
+✓ Executable exists
+✓ Desktop mapping valid
+⚠ Multiple matching windows
+⚠ Executable unavailable
+```
+
+---
+
+# 49. REMOVE APPLICATION
+
+Removing an application means:
+
+```text
+Remove workspace configuration
+```
+
+It does NOT mean:
+
+* uninstall
+* delete executable
+* delete app data
+* kill process
+* remove registry entries
+
+Confirmation:
+
+```text
+Remove Brave from this workspace?
+
+This will not uninstall Brave.
+
+[Cancel] [Remove]
+```
+
+---
+
+# 50. APPLICATION TEMPLATES
+
+Optional templates may assist discovery for:
+
+* Brave
+* Chrome
+* Edge
+* Firefox
+* VS Code
+* Visual Studio
+* Google Antigravity
+* SSMS
+* Postman
+* Docker Desktop
+* Git Bash
+* Windows Terminal
+* File Explorer
+
+Templates must never install applications.
+
+They must never force paths.
+
+They must never override user-selected paths.
+
+---
+
+# 51. BRAVE
+
+Support detection through:
+
+* configured path
+* running process
+* Start Menu
+* known installation locations
+
+Possible locations may include:
+
+```text
+%ProgramFiles%\BraveSoftware\Brave-Browser\Application\brave.exe
+%ProgramFiles(x86)%\BraveSoftware\Brave-Browser\Application\brave.exe
+%LocalAppData%\BraveSoftware\Brave-Browser\Application\brave.exe
+```
+
+Do not modify:
+
+* profiles
+* cookies
+* passwords
+* history
+* extensions
+* browser settings
+
+---
+
+# 52. GOOGLE ANTIGRAVITY
+
+Do NOT assume Antigravity is a website.
+
+Attempt to detect:
+
+* installed application
+* Start Menu shortcut
+* running process
+* user-selected executable
+* known installation location
+
+If not detected:
+
+```text
+Google Antigravity was not detected.
+
+[Browse]
+[Select Running Application]
+[Skip]
+```
+
+Do not substitute a random web URL.
+
+---
+
+# 53. SQL SERVER MANAGEMENT STUDIO
+
+Support version variations.
+
+Do not assume one SSMS executable path.
+
+Use:
+
+* user-selected executable
+* Start Menu discovery
+* controlled installation discovery
+* running process detection
+
+Do not:
+
+* stop SQL Server
+* restart SQL Server
+* modify SQL configuration
+* modify databases
+
+SSMS is simply an application window for this manager.
+
+---
+
+# 54. POSTMAN
+
+Support versioned installations.
+
+Check appropriate user installation locations such as:
+
+```text
+%LocalAppData%\Postman\
+```
+
+Support versioned executables.
+
+Do not blindly assume a single version.
+
+If multiple versions are found, allow the user to choose.
+
+---
+
+# 55. DEVELOPMENT SAFETY
+
+Never manipulate:
+
+* Git repositories
+* source code
+* Docker data
+* WSL
+* SQL Server databases
+* browser profiles
+* Node projects
+* Python environments
+* Visual Studio projects
+* VS Code workspaces
+
+The manager only controls:
+
+* configured application processes/windows
+* Virtual Desktop state
+* its own configuration
+* its own logs
+
+---
+
+# 56. FILESYSTEM SAFETY
+
+Do not:
+
+* delete user files
+* clean temporary directories
+* clean Downloads
+* clean Desktop
+* modify source code
+* modify Git data
+* modify Docker storage
+* modify SQL databases
+* modify browser data
+
+Do not add unrelated "cleanup" features.
+
+---
+
+# 57. NETWORK SAFETY
+
+Version 1 should have no network requirement.
+
+Do not add:
+
+* telemetry
+* analytics
+* remote logging
+* cloud synchronization
+* remote commands
+* update downloads
+
+unless explicitly requested later.
+
+If the application has zero network requirement, document:
+
+```text
+Network access:
+Not required
+```
+
+---
+
+# 58. CONFIGURATION STORAGE
+
+Use user-level configuration.
+
+Example:
+
+```text
+%APPDATA%\VirtualDesktopWorkspaceManager\
+```
+
+Possible structure:
+
+```text
+config/
+    settings.json
+    workspaces.json
+    applications.json
+
+backups/
+
+logs/
+
+diagnostics/
+
+cache/
+```
+
+Do not store mutable user configuration inside the installation directory.
+
+---
+
+# 59. CONFIGURATION VERSIONING
+
+Every configuration must contain:
+
+```json
+{
+  "schemaVersion": 1
+}
+```
+
+Support migration.
+
+Never silently discard fields from older configuration versions.
+
+If migration fails:
+
+```text
+Configuration migration failed.
+
+Your original configuration has been preserved.
+
+[Restore Backup]
+[Export Diagnostic]
+```
+
+---
+
+# 60. ATOMIC CONFIGURATION WRITES
+
+Do not directly overwrite the only configuration file.
+
+Use:
+
+```text
+write temporary file
+→ validate
+→ flush
+→ replace original
+→ retain backup
+```
+
+If replacement fails:
+
+* preserve the original
+* report the error
+* do not leave a partially written configuration
+
+---
+
+# 61. CONFIGURATION BACKUPS
+
+Before significant changes:
+
+* create a backup
+* validate backup
+* retain reasonable history
+
+Do not generate hundreds of backups.
+
+Use a retention policy such as:
+
+```text
+latest backup
++
+limited historical backups
+```
+
+Never delete the only valid backup.
+
+---
+
+# 62. IMPORT / EXPORT
+
+Support:
+
+```text
+Export Workspace
+Import Workspace
+```
+
+Import must:
+
+1. Parse
+2. Validate schema
+3. Validate IDs
+4. Validate desktop mappings
+5. Validate application records
+6. Validate paths
+7. Validate values
+8. Preview changes
+9. Ask confirmation
+10. Back up existing configuration
+11. Apply import atomically
+
+Never replace configuration directly from an unvalidated file.
+
+---
+
+# 63. WORKSPACE PROFILES
+
+Support multiple profiles.
+
+Examples:
+
+```text
+Development
+Work
 Database
 Personal
+Testing
 ```
 
-Each profile can have different application assignments.
+Each profile has its own:
+
+* desktop assignments
+* application assignments
+* launch policies
+* matching policies
+
+Switching profile must NOT automatically execute it.
 
 Example:
 
-### Work
-
 ```text
-Desktop 1 → Browser
-Desktop 2 → CRM
-Desktop 3 → Outlook
-Desktop 4 → Teams
+Active Profile:
+Development
+
+[Switch Profile]
 ```
 
-### Development
-
-```text
-Desktop 1 → Browser
-Desktop 2 → Antigravity + VS Code
-Desktop 3 → SSMS
-Desktop 4 → Postman + Docker
-```
-
-The active profile can be selected from the UI.
-
-This feature should be implemented only if it does not compromise reliability.
+Changing profile changes configuration context only.
 
 ---
 
-# 83. PROFILE IMPORT/EXPORT
+# 64. PROFILE IMPORT/EXPORT
 
-Each workspace profile should be exportable.
+Each profile must be exportable.
 
 Example:
 
@@ -2188,86 +2073,279 @@ Example:
 development-workspace.json
 ```
 
----
-
-# 84. ACCESSIBILITY
-
-UI should support:
-
-- keyboard navigation
-- readable text
-- sufficient contrast
-- clear status indicators
-- tooltips
-- sensible tab order
-- scalable UI where possible
-
-Do not rely solely on color to communicate status.
+Import/export must use the same validation and backup rules as normal configuration.
 
 ---
 
-# 85. UI DESIGN
+# 65. IDEMPOTENCY
 
-The UI should look like a professional Windows utility.
+Running the same operation multiple times must be safe.
 
-Avoid:
-
-- excessive gradients
-- unnecessary animations
-- "AI-looking" glowing interfaces
-- excessive rounded cards
-- giant empty areas
-- flashy dashboards
-
-Prefer:
-
-- clean Windows-style layout
-- clear typography
-- compact controls
-- useful status indicators
-- professional spacing
-- light/dark theme support if practical
-
----
-
-# 86. DARK / LIGHT THEME
-
-If supported:
+Example:
 
 ```text
-Theme:
-[System]
-[Light]
-[Dark]
+Launch Workspace
+Launch Workspace
+Launch Workspace
 ```
 
-Default:
+must NOT create:
 
 ```text
-System
+Brave
+Brave
+Brave
+```
+
+or:
+
+```text
+Desktop 1
+Desktop 2
+Desktop 3
+Desktop 4
+Desktop 5
+Desktop 6
+...
+```
+
+Instead:
+
+```text
+Existing desktop detected.
+Existing process detected.
+Existing window detected.
+Synchronizing.
 ```
 
 ---
 
-# 87. ACCESS TO RAW CONFIGURATION
+# 66. DESKTOP CREATION IDEMPOTENCY
+
+Before creating a desktop:
+
+1. Refresh desktop state.
+2. Check required mapping.
+3. Check stable identity.
+4. Recalculate current count.
+5. Create only what is genuinely missing.
+6. Refresh after creation.
+7. Verify creation.
+
+Never blindly create four desktops every time.
+
+---
+
+# 67. DESKTOP MAPPING CONFLICTS
+
+If the workspace expects:
+
+```text
+Database → Desktop GUID A
+```
+
+but Windows now reports a different mapping:
+
+```text
+Database → unknown
+```
+
+do NOT guess.
+
+Show:
+
+```text
+Desktop mapping changed.
+
+The manager cannot safely determine whether this is the same desktop.
+
+[Review Mapping]
+[Use Current Desktop]
+[Cancel]
+```
+
+---
+
+# 68. ERROR HANDLING
+
+One application failure must not necessarily stop the entire operation.
+
+Example:
+
+```text
+Brave       ✓
+Antigravity ✓
+SSMS        ✓
+Postman     ⚠
+```
+
+Continue where safe.
+
+Final result:
+
+```text
+Workspace completed with warnings.
+
+Successful: 3
+Warnings: 1
+Errors: 0
+Skipped: 0
+```
+
+---
+
+# 69. ERROR CLASSIFICATION
+
+Classify failures:
+
+```text
+ConfigurationError
+CapabilityError
+DiscoveryError
+ProcessError
+WindowDetectionError
+DesktopError
+WindowMoveError
+PermissionError
+TimeoutError
+CancellationError
+UnexpectedError
+```
+
+The UI should show user-friendly explanations while logs retain technical details.
+
+---
+
+# 70. RETRY POLICY
+
+Retry only transient failures.
+
+Example:
+
+```text
+Attempt 1
+Attempt 2
+Attempt 3
+```
+
+Use bounded/exponential delays where appropriate.
+
+Never retry forever.
+
+Do not retry configuration errors.
+
+Do not repeatedly launch applications after uncertain launch state.
+
+---
+
+# 71. TIMEOUTS
+
+Every potentially blocking operation must have a timeout.
+
+Examples:
+
+```text
+Application launch timeout
+Window detection timeout
+Desktop creation timeout
+Window movement timeout
+Provider initialization timeout
+```
+
+Never wait indefinitely.
+
+---
+
+# 72. CRASH RECOVERY
+
+Persist operation metadata sufficient to determine whether the previous operation ended unexpectedly.
+
+On next manager startup:
+
+```text
+Previous workspace operation did not complete.
+
+[Review]
+[Run Dry Run]
+[Sync Workspace]
+[Ignore]
+```
+
+Do not automatically continue execution.
+
+---
+
+# 73. SINGLE OPERATION LOG
+
+Every workspace operation receives a unique operation ID.
+
+Example:
+
+```text
+Operation:
+20261006-143001-AB12
+```
+
+Every log entry for that operation should contain the operation ID.
+
+This makes troubleshooting easier.
+
+---
+
+# 74. STRUCTURED LOGGING
+
+Use:
+
+```text
+INFO
+SUCCESS
+WARNING
+ERROR
+DEBUG
+```
+
+Include:
+
+```text
+timestamp
+level
+operation ID
+component
+action
+result
+error code where applicable
+```
+
+Never log passwords or tokens.
+
+---
+
+# 75. LIVE LOG UI
 
 Provide:
 
+* live log
+* clear
+* copy
+* search
+* filter
+* export
+* open log directory
+
+Filters:
+
 ```text
-Open Configuration Folder
+ALL
+INFO
+SUCCESS
+WARNING
+ERROR
+DEBUG
 ```
-
-and optionally:
-
-```text
-Open workspace.json
-```
-
-But warn the user that manually invalid configuration can break workspace execution.
 
 ---
 
-# 88. DIAGNOSTICS
+# 76. DIAGNOSTIC REPORT
 
 Provide:
 
@@ -2275,515 +2353,770 @@ Provide:
 Generate Diagnostic Report
 ```
 
-The report should include:
+Include:
 
-- Windows version
-- application version
-- Virtual Desktop count
-- configured applications
-- detected executable paths
-- process detection results
-- API capability information
-- recent errors
-
-Do NOT include sensitive information unnecessarily.
+* Windows version/build
+* architecture
+* manager version
+* provider version
+* capability detection
+* desktop count
+* desktop IDs where safe
+* configured applications
+* executable resolution results
+* process detection results
+* window detection results
+* recent errors
+* dependency versions
 
 Redact:
 
-- passwords
-- tokens
-- authentication data
-- browser profile data
-- full command lines containing secrets
+* passwords
+* tokens
+* credentials
+* authentication headers
+* browser profile data
+* secrets inside arguments
+* sensitive command-line values
 
 ---
 
-# 89. PRIVACY
+# 77. PRIVACY
 
-The application should operate locally.
+The application operates locally.
 
-Do not send:
+Do not send data externally.
 
-- process data
-- window titles
-- configuration
-- logs
+No telemetry by default.
 
-to external servers.
+No analytics by default.
 
-Do not add telemetry unless explicitly requested.
+No cloud synchronization.
 
----
+No external process monitoring service.
 
-# 90. UPDATE MECHANISM
-
-Do NOT implement automatic downloading/updating in the first version.
-
-If an update mechanism is considered later, it must be separately designed and explicitly approved.
+No remote management.
 
 ---
 
-# 91. DOCUMENTATION
+# 78. SECURITY
 
-Create a comprehensive README.
+Treat the configuration file as potentially sensitive.
 
-Include:
+Do not allow configuration to become an arbitrary command-execution mechanism.
 
-1. What the application does
-2. Supported Windows versions
-3. Requirements
-4. Installation
-5. First-run setup
-6. Configuration
-7. Adding applications
-8. Moving applications between desktops
-9. Multiple applications per desktop
-10. Workspace profiles
-11. Dry-run mode
-12. Troubleshooting
-13. Logs
-14. Diagnostics
-15. Known Windows limitations
-16. Uninstall instructions
-17. Security considerations
+Validate:
+
+* executable path
+* arguments
+* working directory
+* environment variables
+* matching rules
+* regex patterns
+* timeouts
+* retry counts
+* file paths
+
+Reject unsafe configuration.
 
 ---
 
-# 92. PREREQUISITES
+# 79. REGEX SAFETY
 
-Document all dependencies.
+If window-title regex matching is supported:
 
-If Python is used, provide:
+* validate regex
+* catch invalid patterns
+* prevent catastrophic/unbounded matching where practical
+* provide a timeout or safe regex strategy if the implementation supports it
+
+Invalid regex must not crash the application.
+
+---
+
+# 80. PROCESS EXECUTION SAFETY
+
+Use safe APIs.
+
+Do not use:
+
+* encoded PowerShell
+* downloaded scripts
+* remote commands
+* hidden arbitrary command execution
+* shell injection
+* arbitrary configuration-as-code
+
+Do not execute:
 
 ```text
-Python version
-pip packages
+powershell.exe -EncodedCommand ...
 ```
 
-If PowerShell is used, provide:
+Do not dynamically download and execute anything.
+
+---
+
+# 81. ADMINISTRATOR SAFETY
+
+Do NOT automatically elevate.
+
+Normal functionality should run as a standard user.
+
+If an operation requires elevation:
 
 ```text
-PowerShell version
-required modules
+Administrator permission required.
+
+Reason:
+<specific reason>
+
+[Cancel]
+[Continue]
 ```
 
-Pin versions where appropriate.
+Request elevation only for that operation if genuinely necessary.
 
-Do not blindly install dependencies from untrusted sources.
-
-Use official package repositories.
+Do not run the whole application elevated unnecessarily.
 
 ---
 
-# 93. INSTALLER
+# 82. WINDOWS SECURITY
 
-If practical, create an optional packaging method.
+Never:
 
-For Python, consider:
-
-```text
-PyInstaller
-```
-
-or another appropriate Windows packaging system.
-
-The packaged application should not require Python to be manually installed.
-
-However, development mode must remain available.
+* disable UAC
+* disable Defender
+* disable SmartScreen
+* modify firewall
+* weaken execution policy system-wide
+* install services unnecessarily
+* modify security policies
 
 ---
 
-# 94. EXECUTION POLICY
+# 83. INSTALLATION
 
-If PowerShell is selected:
+Provide a development mode and optional packaged mode.
 
-Do NOT tell the user to permanently weaken system-wide security settings.
+If Python is used, consider a reputable packaging method such as PyInstaller only after the application works correctly.
 
-Avoid:
+Packaging must not hide unsafe behavior.
 
-```powershell
-Set-ExecutionPolicy Unrestricted
-```
+The packaged application must:
 
-If an execution-policy adjustment is genuinely necessary, use the narrowest appropriate scope and explain the security implications.
-
-Prefer:
-
-```text
-CurrentUser
-```
-
-over system-wide changes where appropriate.
+* use the same configuration
+* use the same safety rules
+* preserve logs
+* preserve user configuration
+* not automatically launch the workspace
 
 ---
 
-# 95. ADMINISTRATOR REQUIREMENTS
+# 84. UNINSTALLATION
 
-Clearly document:
+Document uninstall.
 
-```text
-Administrator required: No
-```
+Uninstall may remove:
 
-if normal functionality does not require it.
+* application files
+* optional startup entry
 
-If a specific operation requires elevation:
-
-- explain why
-- request elevation only for that operation
-- do not run the entire application as Administrator unnecessarily
-
----
-
-# 96. INSTALLATION SAFETY
-
-Do not:
-
-- download arbitrary executables
-- modify PATH automatically
-- modify registry unnecessarily
-- disable Windows Defender
-- disable SmartScreen
-- disable UAC
-- modify firewall rules
-
----
-
-# 97. UNINSTALL
-
-Provide documentation for removing the application.
-
-Uninstall should remove:
-
-- application files
-- optional startup entry
-
-But ask whether the user wants to preserve:
+But ask whether to preserve:
 
 ```text
 Workspace configuration
 Logs
+Backups
+Profiles
 ```
 
-Do not delete user configuration silently.
+Never silently delete user configuration.
 
 ---
 
-# 98. IMPORTANT WINDOWS LIMITATIONS
+# 85. SETTINGS
 
-Research and document actual limitations of the selected Virtual Desktop API.
+Provide:
 
-Do not claim that Windows exposes functionality if it does not.
+## General
 
-If an operation cannot be reliably implemented:
+* Start with Windows
+* Start minimized
+* Minimize to tray
+* Confirm before execution
+* Automation enabled
 
-1. Detect that limitation.
-2. Tell the user.
-3. Provide the safest fallback.
-4. Clearly mark the fallback.
-5. Do not pretend it succeeded.
+## Execution
+
+* launch timeout
+* window timeout
+* polling interval
+* retry count
+* launch delay
+* concurrency mode
+
+## Safety
+
+* dry-run default
+* confirmation requirement
+* never kill processes
+* never delete desktops
+
+## Logging
+
+* log level
+* retention
+* diagnostic retention
+
+## Appearance
+
+* System
+* Light
+* Dark
 
 ---
 
-# 99. API COMPATIBILITY
+# 86. ACCESSIBILITY
 
-Before implementation, investigate the currently supported Windows APIs/libraries for:
+Support:
 
-- Virtual Desktop enumeration
-- desktop creation
-- desktop switching
-- moving windows
-- determining window desktop membership
+* keyboard navigation
+* logical tab order
+* readable text
+* sufficient contrast
+* tooltips
+* clear focus states
+* status text
+* scalable UI where possible
 
-Prefer actively maintained approaches.
+Never communicate status using color alone.
 
-If a third-party library is used, document:
-
-- project/package name
-- version
-- license
-- maintenance status
-- limitations
-- why it was selected
+Use icons + text.
 
 ---
 
-# 100. DO NOT USE OBSOLETE / FRAGILE TECHNIQUES AS PRIMARY IMPLEMENTATION
+# 87. UI DESIGN
 
-Avoid making the entire application dependent on:
+Create a professional Windows utility.
+
+Avoid:
+
+* excessive gradients
+* glowing AI interfaces
+* excessive rounded cards
+* giant empty areas
+* unnecessary animations
+* flashy dashboards
+
+Prefer:
+
+* Windows-like design
+* clear typography
+* compact layout
+* clear hierarchy
+* useful status indicators
+* professional spacing
+* light/dark/system theme
+* predictable navigation
+
+The UI should feel like a real Windows productivity utility.
+
+---
+
+# 88. NO FAKE UI
+
+Every button must either:
+
+1. perform its actual intended operation,
+
+or
+
+2. be clearly labeled as unavailable/not implemented.
+
+Do NOT create buttons that appear functional but do nothing.
+
+Do NOT implement fake success messages.
+
+Do NOT use mock data in the production UI unless explicitly marked as demonstration/test mode.
+
+---
+
+# 89. STATUS SYSTEM
+
+Use explicit statuses:
 
 ```text
-SendKeys
-pyautogui
-Win + Ctrl + D
-Win + Ctrl + Left
-Win + Ctrl + Right
+Ready
+Running
+Completed
+Warning
+Error
+Unavailable
+Not Detected
+Disabled
+Cancelled
+Unknown
 ```
 
-unless there is no reliable API alternative.
-
-If used as fallback, isolate it inside a dedicated fallback provider.
+Do not show "Success" if the underlying operation was not verified.
 
 ---
 
-# 101. OBSERVABILITY
+# 90. VERIFICATION
 
-Every major action should produce a traceable event.
+After an operation:
+
+```text
+Requested
+→ Executed
+→ Verified
+```
 
 Example:
 
 ```text
-WorkspaceLaunchStarted
-DesktopDiscoveryCompleted
-DesktopCreated
-ApplicationDiscoveryStarted
-ApplicationLaunchStarted
-WindowDetected
-WindowMoveStarted
-WindowMoveCompleted
-VerificationCompleted
-WorkspaceLaunchCompleted
+Requested:
+Move Brave → Desktop 1
+
+Executed:
+MoveWindowToDesktop succeeded
+
+Verified:
+GetWindowDesktopId == Desktop 1
+
+Result:
+SUCCESS
 ```
 
-This will make troubleshooting much easier.
-
----
-
-# 102. FINAL STATUS REPORT
-
-At the end of every operation, show:
+If verification is unavailable:
 
 ```text
-Workspace Operation Complete
+WARNING
 
-Virtual Desktops:
-4 / 4
-
-Applications:
-4 configured
-4 detected
-3 launched/reused
-4 assigned
-1 warning
-
-Errors:
-0
-
-Warnings:
-1
-
-Duration:
-8.42 seconds
+Move was requested successfully, but the selected API does not provide
+reliable post-operation verification.
 ```
 
----
-
-# 103. DEVELOPMENT WORKFLOW FOR ANTIGRAVITY
-
-Before writing the final code:
-
-## Phase 1 — Analyze
-
-Identify:
-
-- Windows Virtual Desktop API options
-- chosen implementation approach
-- library limitations
-- window-management limitations
-- packaging requirements
-
-## Phase 2 — Design
-
-Create:
-
-- architecture
-- data models
-- configuration schema
-- UI structure
-- execution flow
-- error-handling strategy
-
-## Phase 3 — Safety Review
-
-Create a table:
-
-| Risk | Mitigation |
-|---|---|
-| Duplicate applications | Process/window detection |
-| Duplicate desktops | Desktop enumeration |
-| Wrong window moved | HWND/process verification |
-| Missing application | Discovery + graceful skip |
-| API failure | Retry + fallback |
-| Configuration corruption | Validation + backups |
-| Unexpected execution | Explicit user action |
-| Permission problems | No automatic elevation |
-| Data loss | No file/application deletion |
-
-## Phase 4 — Implementation
-
-Build the complete application.
-
-## Phase 5 — Static Validation
-
-Check:
-
-- syntax
-- imports
-- configuration schema
-- UI references
-- dependency declarations
-- obvious runtime errors
-- unsafe subprocess usage
-- hard-coded user paths
-- unsafe elevation
-- accidental destructive commands
-
-## Phase 6 — Tests
-
-Run only safe/non-destructive tests where possible.
-
-Mock Windows desktop operations.
-
-## Phase 7 — Final Review
-
-Perform a final production-readiness review.
-
-Do NOT launch the application.
+Never falsely report success.
 
 ---
 
-# 104. REQUIRED DELIVERABLES
+# 91. CURRENT DESKTOP
 
-Provide:
-
-### Application
-
-Complete production-ready source code.
-
-### UI
-
-Complete functional GUI.
-
-### Configuration
-
-Default workspace configuration.
-
-### Tests
-
-Unit/integration tests with Windows API operations mocked where necessary.
-
-### Documentation
-
-README.md.
-
-### Dependency file
-
-For example:
+Show:
 
 ```text
-requirements.txt
+Current Desktop:
+Desktop 2 — Development
 ```
 
-or equivalent.
+Refresh when:
 
-### Configuration schema
+* application opens
+* user presses Refresh
+* desktop changes are detected
+* workspace operation begins
 
-Document the JSON configuration format.
+Do not aggressively poll if unnecessary.
 
-### Troubleshooting
+---
 
-Detailed troubleshooting guide.
+# 92. USER EXPERIENCE WITH DESKTOP SWITCHING
 
-### Security Review
+The application should NOT unexpectedly switch the user to another Virtual Desktop merely to perform background operations unless explicitly required and clearly communicated.
 
-Document:
+Prefer direct APIs that do not require switching.
 
-- permissions
-- process execution
-- filesystem access
-- network access
-- configuration security
-- logging/privacy
+If switching is unavoidable:
 
-### Architecture Document
+1. Warn the user when appropriate.
+2. Preserve the user's original desktop.
+3. Perform the required operation.
+4. Restore the user's original desktop if safe.
+5. Verify restoration when possible.
 
-Explain:
+Never leave the user on an unexpected desktop without explanation.
+
+---
+
+# 93. OPEN DESKTOP
+
+Clicking:
+
+```text
+Open Desktop
+```
+
+should only switch to that desktop.
+
+It must NOT launch applications.
+
+It must NOT synchronize the workspace.
+
+It must NOT move windows.
+
+---
+
+# 94. APPLICATION "OPEN" BUTTON
+
+Distinguish:
+
+```text
+Open Application
+```
+
+from:
+
+```text
+Launch Workspace
+```
+
+If the user manually clicks Open Application:
+
+* explicitly launch that configured application
+* do not execute the entire workspace
+* do not modify other desktops
+
+---
+
+# 95. WORKSPACE PROTECTION
+
+Before executing:
+
+Show a clear summary:
+
+```text
+This operation may:
+
+✓ Create missing Virtual Desktops
+✓ Launch configured applications
+✓ Move configured application windows
+
+It will NOT:
+
+✗ Delete desktops
+✗ Kill processes
+✗ Uninstall applications
+✗ Delete files
+✗ Modify application data
+```
+
+---
+
+# 96. CONFIGURATION VALIDATION
+
+Validate before execution:
+
+* schema version
+* profile ID
+* desktop IDs
+* duplicate IDs
+* application IDs
+* executable paths
+* working directories
+* arguments
+* desktop mappings
+* matching rules
+* regex
+* timeouts
+* retry counts
+* launch delays
+* unsupported capabilities
+
+Show all blocking errors before execution.
+
+---
+
+# 97. ARCHITECTURE
+
+Use clean separation:
 
 ```text
 UI
  ↓
-Workspace Manager
+Application Controller
  ↓
-Desktop Provider
+Workspace Engine
+ ↓
+State Discovery
+ ↓
+Planner
+ ↓
+Execution Engine
+ ↓
+Verification
+ ↓
+Reporting
+```
+
+Infrastructure:
+
+```text
+Virtual Desktop Provider
 Window Provider
 Process Provider
+Application Launcher
 Application Discovery
 Configuration Store
-Logging
+Profile Store
+Logging Service
+Diagnostics Service
+Startup Integration
 ```
 
 ---
 
-# 105. FINAL QUALITY STANDARD
+# 98. REQUIRED ABSTRACTIONS
 
-The finished application must feel like a real Windows utility rather than a generated script.
+Create interfaces/abstractions such as:
 
-It must be:
+```text
+IVirtualDesktopProvider
+IWindowProvider
+IProcessProvider
+IApplicationLauncher
+IApplicationDiscovery
+IConfigurationStore
+IWorkspaceRepository
+IWorkspacePlanner
+IWorkspaceExecutor
+IVerificationService
+ILogService
+IDiagnosticsService
+IStartupManager
+```
 
-- reliable
-- maintainable
-- idempotent
-- configurable
-- testable
-- safe
-- transparent
-- recoverable
-- user-controlled
-- production-oriented
-
-Do not sacrifice reliability for visual effects.
-
-Do not sacrifice safety for automation.
-
-Do not sacrifice maintainability by putting everything into one script.
+The core business logic must not directly depend on Windows COM calls.
 
 ---
 
-# 106. FINAL ACCEPTANCE TEST
+# 99. MOCK PROVIDERS
 
-Before considering the project complete, verify that the design supports all of these scenarios:
+Provide:
+
+```text
+MockVirtualDesktopProvider
+MockWindowProvider
+MockProcessProvider
+MockApplicationLauncher
+MockConfigurationStore
+```
+
+Automated tests must use these.
+
+Tests must never manipulate my real Virtual Desktops.
+
+---
+
+# 100. RECOMMENDED PROJECT STRUCTURE
+
+Use an appropriate structure such as:
+
+```text
+VirtualDesktopWorkspaceManager/
+│
+├── app/
+│   ├── main/
+│   ├── ui/
+│   ├── core/
+│   ├── models/
+│   ├── services/
+│   ├── providers/
+│   ├── discovery/
+│   ├── execution/
+│   ├── verification/
+│   ├── configuration/
+│   ├── profiles/
+│   ├── diagnostics/
+│   ├── logging/
+│   └── security/
+│
+├── tests/
+│   ├── unit/
+│   ├── integration/
+│   ├── mocks/
+│   └── fixtures/
+│
+├── config/
+│
+├── docs/
+│
+├── scripts/
+│
+├── packaging/
+│
+├── README.md
+├── CHANGELOG.md
+├── LICENSE
+└── dependency file
+```
+
+Adapt the structure to the selected technology.
+
+---
+
+# 101. TESTING
+
+Create tests for:
+
+## Configuration
+
+* valid config
+* malformed config
+* missing fields
+* duplicate IDs
+* migration
+* backup
+* restore
+* atomic write
+* import
+* export
+
+## Application discovery
+
+* valid executable
+* missing executable
+* multiple installations
+* running application
+* Start Menu discovery
+* SSMS detection
+* Postman detection
+* Brave detection
+
+## Process handling
+
+* process exists
+* process missing
+* multiple processes
+* process exits during detection
+* path mismatch
+
+## Window handling
+
+* visible window
+* hidden window
+* minimized window
+* multiple windows
+* child windows
+* helper windows
+* title matching
+* executable matching
+* ambiguous match
+
+## Desktop handling
+
+* one desktop
+* two desktops
+* four desktops
+* more than four desktops
+* missing desktop
+* extra desktop
+* desktop identity mismatch
+* unsupported capability
+* desktop creation failure
+
+## Workspace
+
+* multiple applications per desktop
+* duplicate launch prevention
+* missing application
+* reassignment
+* synchronization
+* dry-run
+* cancellation
+* retry
+* partial failure
+* crash recovery
+
+---
+
+# 102. PROPERTY / INVARIANT TESTS
+
+Test important invariants.
+
+Examples:
+
+```text
+Launching workspace twice does not intentionally create duplicates.
+
+Removing an application never uninstalls it.
+
+A failed application does not prevent unrelated applications from being processed.
+
+Dry Run performs no real workspace modification.
+
+Configuration import cannot replace configuration before validation.
+
+Cancellation prevents future operations.
+
+Extra user-created desktops are preserved.
+```
+
+---
+
+# 103. ACCEPTANCE TESTS
+
+Before considering the project complete:
 
 ### Scenario 1
 
-User has 2 Virtual Desktops.
+Existing desktops:
 
-Application requires 4.
+```text
+2
+```
+
+Required:
+
+```text
+4
+```
 
 Result:
 
 ```text
-2 additional desktops created.
+Only the required additional desktops are created.
 ```
 
 ### Scenario 2
 
-User already has 4 desktops.
+Existing:
+
+```text
+4
+```
+
+Required:
+
+```text
+4
+```
 
 Result:
 
 ```text
-No additional desktops created.
+No unnecessary desktops created.
 ```
 
 ### Scenario 3
 
-User has 6 desktops.
+Existing:
+
+```text
+6
+```
+
+Required:
+
+```text
+4
+```
 
 Result:
 
 ```text
-Existing 6 desktops preserved.
-Workspace uses first 4 configured desktops.
+All 6 remain.
 ```
 
 ### Scenario 4
@@ -2794,35 +3127,22 @@ Result:
 
 ```text
 No unnecessary duplicate launch.
-Existing window assigned to configured desktop.
 ```
 
 ### Scenario 5
 
-Postman is not running.
+Postman is missing.
 
 Result:
 
 ```text
-Postman launched.
-Window detected.
-Window assigned.
+Warning.
+Other applications continue.
 ```
 
 ### Scenario 6
 
-Postman is not installed.
-
-Result:
-
-```text
-Warning displayed.
-Other applications continue.
-```
-
-### Scenario 7
-
-Desktop 2 contains:
+One desktop contains:
 
 ```text
 Antigravity
@@ -2833,23 +3153,33 @@ Git Bash
 Result:
 
 ```text
-All three can be assigned to Desktop 2.
+All three are allowed.
 ```
 
-### Scenario 8
+### Scenario 7
 
-User moves Brave from Desktop 1 to Desktop 4 in the UI.
+User changes:
+
+```text
+Brave
+Desktop 1 → Desktop 4
+```
 
 Result:
 
 ```text
-Configuration saved.
-Future workspace launches use Desktop 4.
+Configuration persists.
 ```
 
-### Scenario 9
+### Scenario 8
 
-User adds Docker Desktop to Desktop 2.
+User adds:
+
+```text
+Docker Desktop
+```
+
+to Desktop 2.
 
 Result:
 
@@ -2858,98 +3188,1391 @@ Existing applications remain.
 Docker Desktop is added.
 ```
 
-### Scenario 10
+### Scenario 9
 
-User runs Launch Workspace twice.
+Launch Workspace is clicked twice.
 
 Result:
 
 ```text
-No unnecessary duplicate desktops.
-No unnecessary duplicate processes.
-Workspace is synchronized safely.
+No unnecessary duplicates.
+```
+
+### Scenario 10
+
+Manager opens.
+
+Result:
+
+```text
+Nothing launches automatically.
 ```
 
 ### Scenario 11
 
-User starts the manager.
-
-Result:
-
-```text
-Manager opens.
-Nothing is launched automatically by default.
-```
-
-### Scenario 12
-
-User clicks:
-
-```text
-Launch Workspace
-```
+User clicks Launch Workspace.
 
 Result:
 
 ```text
 Confirmation appears if enabled.
-Workspace execution begins only after explicit confirmation.
+No operation begins before confirmation.
+```
+
+### Scenario 12
+
+User clicks Dry Run.
+
+Result:
+
+```text
+No real Windows workspace modification occurs.
+```
+
+### Scenario 13
+
+User clicks Stop during execution.
+
+Result:
+
+```text
+Future actions stop.
+Existing applications are not killed.
+```
+
+### Scenario 14
+
+Configuration is malformed.
+
+Result:
+
+```text
+Execution blocked.
+Existing configuration preserved.
+Useful error displayed.
+```
+
+### Scenario 15
+
+Virtual Desktop API unavailable.
+
+Result:
+
+```text
+Application remains usable for configuration/diagnostics.
+No fake success.
+Clear capability warning.
 ```
 
 ---
 
-# 107. MOST IMPORTANT RULES
+# 104. STATIC VALIDATION
 
-The following rules override convenience:
+Before declaring the project complete, inspect the complete source tree.
 
-1. **Never automatically execute the generated application during development.**
-2. **Never automatically delete Virtual Desktops.**
-3. **Never automatically kill application processes.**
-4. **Never uninstall applications.**
-5. **Never delete user files.**
-6. **Never modify development data.**
-7. **Never silently elevate to Administrator.**
-8. **Never silently create startup automation.**
-9. **Never claim an operation succeeded without verification when verification is available.**
-10. **Never depend entirely on keyboard simulation when a reliable Windows API is available.**
-11. **Never hard-code application paths as the only method of discovery.**
-12. **Never limit a desktop to one application.**
-13. **Never require source-code changes to add or reassign applications.**
-14. **Never overwrite existing workspace configuration without validation/backup.**
-15. **Never automatically launch the workspace simply because the manager was opened.**
-16. **Do not run the generated application until I explicitly tell you to run it.**
+Check:
+
+* syntax
+* imports
+* type errors where applicable
+* missing files
+* missing references
+* broken UI handlers
+* configuration schema
+* dependency declarations
+* unsafe subprocess usage
+* unsafe shell execution
+* encoded PowerShell
+* hidden commands
+* arbitrary command execution
+* hard-coded personal paths
+* accidental administrator elevation
+* destructive file operations
+* registry modifications
+* startup creation
+* fake success states
+* unhandled exceptions
+* race conditions
+* cancellation handling
+* duplicate execution
+* configuration corruption risks
 
 ---
 
-# FINAL INSTRUCTION TO GOOGLE ANTIGRAVITY
+# 105. STATIC SECURITY REVIEW
 
-Start by analyzing the requirements and producing the architecture/design internally in the project documentation.
+Perform a final source review specifically for:
 
-Then implement the complete application.
+```text
+Command Injection
+Path Injection
+Arbitrary Command Execution
+Unsafe Subprocess
+Privilege Escalation
+Untrusted Configuration
+Secret Leakage
+Sensitive Logging
+Unexpected Network Access
+Startup Persistence
+Registry Modification
+File Deletion
+Process Termination
+```
 
-Do not stop at a prototype.
+Produce:
 
-Do not create a fake UI with non-functional buttons.
+`docs/security-review.md`
 
-Every UI control that is presented as functional must be connected to real application logic or clearly marked as not yet implemented.
+---
 
-Prioritize reliable Windows API integration, safe process/window management, persistent configuration, and idempotent workspace synchronization.
+# 106. API COMPATIBILITY DOCUMENTATION
 
-After implementation, perform static validation and safe mocked tests.
+Create:
 
-Finally, provide me with:
+`docs/windows-api-compatibility.md`
+
+Document:
+
+* Windows APIs used
+* COM interfaces used
+* third-party libraries
+* library versions
+* Windows versions tested/supported
+* undocumented/internal APIs if any
+* risks
+* fallback behavior
+* limitations
+* detection strategy
+
+Do not hide the use of undocumented Windows interfaces.
+
+---
+
+# 107. DEPENDENCY MANAGEMENT
+
+Document:
+
+* package name
+* version
+* purpose
+* license
+* source
+* maintenance status
+* compatibility
+
+Pin versions where appropriate.
+
+Do not blindly install packages from arbitrary URLs.
+
+Use reputable package repositories.
+
+Do not silently install dependencies while merely building the project unless explicitly necessary and safe.
+
+---
+
+# 108. LOG PRIVACY
+
+Never log:
+
+* passwords
+* access tokens
+* API keys
+* cookies
+* browser credentials
+* authentication headers
+* sensitive environment variables
+
+If application arguments may contain secrets, redact them.
+
+Example:
+
+```text
+--token=********
+```
+
+rather than:
+
+```text
+--token=actual-secret
+```
+
+---
+
+# 109. USER CONFIGURATION SECURITY
+
+If configuration contains executable paths and arguments, treat it as executable-adjacent data.
+
+Display a warning when importing external workspace configurations:
+
+```text
+Imported configuration contains application launch definitions.
+
+Review before execution.
+```
+
+Never execute an imported workspace automatically.
+
+---
+
+# 110. IMPORTED WORKSPACE SAFETY
+
+Import must never automatically:
+
+* launch applications
+* create desktops
+* move windows
+* enable startup
+* modify system settings
+
+Import only changes configuration after validation and confirmation.
+
+---
+
+# 111. BACKUP AND RECOVERY
+
+Provide:
+
+```text
+Backup Configuration
+Restore Configuration
+```
+
+Restoration must be validated before applying.
+
+Do not restore automatically on startup without user confirmation.
+
+---
+
+# 112. OPERATION HISTORY
+
+Maintain a lightweight history of workspace operations.
+
+Show:
+
+```text
+Time
+Profile
+Operation
+Result
+Duration
+Warnings
+Errors
+```
+
+Do not store sensitive process data unnecessarily.
+
+Allow clearing operation history.
+
+---
+
+# 113. HEALTH CHECK
+
+Provide:
+
+```text
+Run Health Check
+```
+
+Check:
+
+```text
+✓ Windows supported
+✓ Virtual Desktop provider available
+✓ Configuration valid
+✓ Desktop mappings valid
+✓ Applications detected
+✓ Permissions sufficient
+✓ Configuration writable
+✓ Logging writable
+```
+
+This must be diagnostic only.
+
+Do not execute workspace operations during Health Check.
+
+---
+
+# 114. OFFLINE-FIRST DESIGN
+
+The manager must work without internet access.
+
+No network should be necessary for:
+
+* desktop management
+* application detection
+* configuration
+* logging
+* diagnostics
+
+---
+
+# 115. NO AUTOMATIC UPDATER IN VERSION 1
+
+Do not implement automatic downloading/updating.
+
+If updates are implemented later, they must be separately designed and explicitly approved.
+
+---
+
+# 116. DOCUMENTATION
+
+Create comprehensive documentation:
+
+`README.md`
+
+Include:
+
+1. Purpose
+2. Features
+3. Supported Windows versions
+4. Requirements
+5. Architecture
+6. Installation
+7. First-run setup
+8. Configuration
+9. Adding applications
+10. Removing applications
+11. Moving applications
+12. Multiple applications per desktop
+13. Workspace profiles
+14. Dry Run
+15. Launch Workspace
+16. Sync Workspace
+17. Logs
+18. Diagnostics
+19. Troubleshooting
+20. Known Windows limitations
+21. API limitations
+22. Security
+23. Privacy
+24. Startup behavior
+25. Uninstall
+26. Packaging
+27. Testing
+
+---
+
+# 117. CHANGELOG
+
+Create:
+
+`CHANGELOG.md`
+
+Document versioned changes.
+
+---
+
+# 118. CONFIGURATION SCHEMA
+
+Create documentation for the complete configuration model.
+
+Include examples for:
+
+* one desktop
+* multiple desktops
+* multiple apps per desktop
+* profiles
+* launch settings
+* matching rules
+* import/export
+
+---
+
+# 119. SAMPLE CONFIGURATION
+
+Provide a safe sample configuration.
+
+The sample configuration must NOT automatically execute during development.
+
+Example:
+
+```json
+{
+  "schemaVersion": 1,
+  "activeProfile": "development",
+  "profiles": [
+    {
+      "id": "development",
+      "name": "Development",
+      "desktops": [],
+      "applications": []
+    }
+  ]
+}
+```
+
+---
+
+# 120. NO PERSONAL PATHS
+
+Do not hard-code paths belonging specifically to my machine.
+
+Do not hard-code:
+
+```text
+C:\Users\farma\
+```
+
+as a required path.
+
+Use:
+
+```text
+%USERPROFILE%
+%APPDATA%
+%LOCALAPPDATA%
+```
+
+or dynamically discover paths.
+
+---
+
+# 121. NO UNRELATED FEATURES
+
+Do not add:
+
+* system cleaners
+* debloat functionality
+* registry cleaners
+* startup cleaners
+* antivirus controls
+* process killers
+* RAM cleaners
+* disk cleaners
+* browser cleaners
+* telemetry
+* cryptocurrency
+* remote control
+
+This is a Virtual Desktop Workspace Manager.
+
+Keep the scope focused.
+
+---
+
+# 122. PERFORMANCE
+
+The manager should be lightweight.
+
+Avoid:
+
+* continuous full process scans
+* continuous full filesystem scans
+* aggressive polling
+* unnecessary CPU usage
+* memory leaks
+* unbounded log growth
+
+Use event-driven mechanisms where practical.
+
+If polling is required:
+
+* use configurable intervals
+* stop polling when not needed
+* avoid duplicate polling loops
+
+---
+
+# 123. RESOURCE MANAGEMENT
+
+Ensure:
+
+* subprocess handles are released
+* Windows handles are closed
+* COM resources are handled correctly
+* threads/tasks terminate
+* timers are disposed
+* log handlers do not multiply
+* UI callbacks do not leak
+
+---
+
+# 124. THREADING / UI SAFETY
+
+Long-running operations must not freeze the GUI.
+
+Use an appropriate worker/background execution model.
+
+The UI must remain responsive during:
+
+* application discovery
+* launch waiting
+* window detection
+* desktop operations
+* synchronization
+
+All UI updates must occur through the correct UI-thread mechanism.
+
+---
+
+# 125. LOGGING DURING BACKGROUND OPERATIONS
+
+Background operations must report progress:
+
+```text
+Preparing desktops... 25%
+Launching applications... 50%
+Moving windows... 75%
+Verifying... 90%
+Complete... 100%
+```
+
+Never make progress percentages fake.
+
+If exact progress is unavailable:
+
+```text
+Working...
+```
+
+is preferable to false precision.
+
+---
+
+# 126. FINAL OPERATION REPORT
+
+At the end:
+
+```text
+Workspace Operation Complete
+
+Profile:
+Development
+
+Virtual Desktops:
+4 / 4
+
+Applications:
+7 configured
+6 detected
+4 launched/reused
+5 windows assigned
+1 skipped
+
+Warnings:
+1
+
+Errors:
+0
+
+Cancelled:
+No
+
+Duration:
+8.42 seconds
+```
+
+Provide:
+
+```text
+[View Details]
+[Open Logs]
+[Run Diagnostics]
+```
+
+---
+
+# 127. USER ACTION AUDIT
+
+Log user-initiated management actions such as:
+
+```text
+Application Added
+Application Removed
+Application Reassigned
+Desktop Mapping Changed
+Profile Switched
+Configuration Imported
+Configuration Restored
+Startup Enabled
+Startup Disabled
+Workspace Launch Started
+Workspace Launch Cancelled
+```
+
+Do not log sensitive information.
+
+---
+
+# 128. APPLICATION REMOVAL SAFETY
+
+Removing a workspace entry must never remove:
+
+* executable
+* installation
+* process
+* application data
+* user files
+
+Only configuration changes.
+
+---
+
+# 129. DESKTOP CREATION SAFETY
+
+Before creating a desktop, show it in the execution plan.
+
+During real execution:
+
+```text
+Create Desktop
+→ Verify
+→ Update mapping
+```
+
+If creation fails:
+
+```text
+Desktop creation failed.
+
+No additional desktop actions will be attempted for this mapping.
+```
+
+Do not repeatedly retry indefinitely.
+
+---
+
+# 130. DESKTOP DELETION
+
+Do NOT implement automatic desktop deletion.
+
+If a future version supports manual deletion:
+
+* require explicit user action
+* show warning
+* explain that applications may be affected
+* never delete a desktop during normal workspace synchronization
+
+For Version 1, prefer not implementing desktop deletion at all.
+
+---
+
+# 131. WINDOW MOVE SAFETY
+
+Before moving a window:
+
+Verify:
+
+```text
+HWND still exists
+PID still exists
+Executable still matches
+Window still matches configured application
+Target desktop still exists
+Operation not cancelled
+```
+
+If any critical condition changes:
+
+```text
+Skip move and re-evaluate.
+```
+
+Do not move a reused/stale HWND blindly.
+
+---
+
+# 132. WINDOW HANDLE SAFETY
+
+HWNDs are runtime identifiers.
+
+Never persist HWNDs as permanent application identity.
+
+Use them only for the current runtime operation.
+
+---
+
+# 133. PROCESS ID SAFETY
+
+PIDs can be reused by Windows.
+
+Never trust an old PID without revalidating:
+
+* process exists
+* executable path matches
+* process identity still matches
+
+---
+
+# 134. APPLICATION EXIT RACE
+
+If an application closes during synchronization:
+
+```text
+Application exited before window assignment.
+
+Result:
+Skipped safely.
+```
+
+Do not immediately relaunch unless configuration explicitly allows recovery and the user has authorized workspace automation.
+
+---
+
+# 135. USER MANUAL INTERVENTION
+
+If the user manually closes an application during a workspace operation:
+
+Do not automatically fight the user.
+
+Record:
+
+```text
+Application closed by user during operation.
+```
+
+Continue safely.
+
+---
+
+# 136. PAUSE
+
+If practical, provide:
+
+```text
+Pause Automation
+```
+
+Pause must stop future workspace actions.
+
+It must not kill or modify already-running applications.
+
+---
+
+# 137. PROFILE SWITCHING SAFETY
+
+Switching profiles must NOT automatically launch the new profile.
+
+Example:
+
+```text
+Profile changed:
+Development → Work
+
+No applications were launched.
+
+[Launch Work Workspace]
+```
+
+---
+
+# 138. CONFIGURATION CHANGE DURING EXECUTION
+
+Do not allow unsafe configuration mutations while an operation is running.
+
+Options:
+
+```text
+Disable editing during execution
+```
+
+or:
+
+```text
+Queue configuration change for next operation
+```
+
+Do not let the executor operate on partially edited configuration.
+
+---
+
+# 139. VERSIONING
+
+Display:
+
+```text
+Virtual Desktop Workspace Manager v1.0.0
+```
+
+Use semantic versioning where appropriate.
+
+---
+
+# 140. ABOUT PAGE
+
+Show:
+
+* application version
+* build
+* Python/runtime version if relevant
+* dependency versions
+* license
+* project information
+* API provider
+* diagnostics shortcut
+
+---
+
+# 141. TEST ENVIRONMENT
+
+Do not require real application launches for unit tests.
+
+Create fixtures for:
+
+```text
+Brave
+Antigravity
+SSMS
+Postman
+VS Code
+Docker
+```
+
+These should be simulated.
+
+---
+
+# 142. MOCK EXECUTION EXAMPLE
+
+Example mock state:
+
+```text
+Desktop 1
+Desktop 2
+Desktop 3
+
+Brave → Desktop 3
+Antigravity → Desktop 2
+SSMS → Desktop 1
+Postman → not running
+```
+
+Desired:
+
+```text
+Brave → Desktop 1
+Antigravity → Desktop 2
+SSMS → Desktop 3
+Postman → Desktop 4
+```
+
+The planner should produce:
+
+```text
+Create Desktop 4
+
+Move Brave
+No action for Antigravity
+Move SSMS
+Launch Postman
+Move Postman
+Verify
+```
+
+No real Windows operation should occur.
+
+---
+
+# 143. FINAL SAFETY REVIEW TABLE
+
+Create:
+
+`docs/safety-review.md`
+
+At minimum:
+
+| Risk                        | Mitigation                            |
+| --------------------------- | ------------------------------------- |
+| Duplicate applications      | Process/window detection              |
+| Duplicate desktops          | Desktop enumeration + stable identity |
+| Wrong window                | HWND/PID/executable verification      |
+| Stale HWND                  | Revalidation                          |
+| PID reuse                   | Process-path verification             |
+| Missing application         | Discovery + graceful skip             |
+| API failure                 | Capability detection + bounded retry  |
+| API incompatibility         | Version/capability detection          |
+| Configuration corruption    | Validation + atomic writes + backups  |
+| Unsafe import               | Validation + preview + confirmation   |
+| Unexpected execution        | Explicit action                       |
+| Startup persistence         | Explicit opt-in                       |
+| Privilege escalation        | No automatic elevation                |
+| Data loss                   | No deletion                           |
+| User desktop deletion       | Never automatic                       |
+| Process termination         | Prohibited                            |
+| Secret leakage              | Log redaction                         |
+| Arbitrary command execution | Safe subprocess API                   |
+| Race condition              | State revalidation                    |
+| Duplicate operations        | Single-operation lock                 |
+| Manager duplication         | Single-instance guard                 |
+| UI freezing                 | Background execution                  |
+| Cancellation failure        | Cooperative cancellation              |
+| False success               | Verification                          |
+| API limitation              | Explicit warning                      |
+| User intervention conflict  | State-aware synchronization           |
+
+---
+
+# 144. DEVELOPMENT WORKFLOW FOR GOOGLE ANTIGRAVITY
+
+Follow these phases.
+
+## PHASE 1 — ANALYZE
+
+Before implementation, inspect:
+
+* requirements
+* Windows API options
+* available libraries
+* compatibility
+* risks
+* packaging
+* application discovery
+* window matching
+* desktop identity
+
+Create:
+
+`docs/requirements-analysis.md`
+
+---
+
+## PHASE 2 — TECHNOLOGY DECISION
+
+Create:
+
+`docs/technology-decision.md`
+
+Explain the selected stack.
+
+---
+
+## PHASE 3 — ARCHITECTURE
+
+Create:
+
+`docs/architecture.md`
+
+Include:
+
+```text
+UI
+ ↓
+Application Controller
+ ↓
+Workspace Engine
+ ↓
+State Discovery
+ ↓
+Planner
+ ↓
+Executor
+ ↓
+Verification
+ ↓
+Reporting
+```
+
+---
+
+## PHASE 4 — DATA MODEL
+
+Create:
+
+`docs/configuration-schema.md`
+
+Define:
+
+* workspace
+* profile
+* desktop
+* application
+* matching rule
+* execution settings
+* safety settings
+* schema version
+
+---
+
+## PHASE 5 — SAFETY REVIEW
+
+Create:
+
+`docs/safety-review.md`
+
+Identify risks before implementation.
+
+---
+
+## PHASE 6 — IMPLEMENTATION
+
+Build the complete application.
+
+Do not stop after creating the UI.
+
+Do not create fake controls.
+
+Connect every intended feature to real logic.
+
+---
+
+## PHASE 7 — STATIC VALIDATION
+
+Review:
+
+* syntax
+* imports
+* references
+* types
+* configuration
+* dependencies
+* unsafe process execution
+* unsafe filesystem access
+* elevation
+* startup
+* logging
+* exception handling
+* cancellation
+* concurrency
+
+---
+
+## PHASE 8 — SAFE TESTING
+
+Run only:
+
+* unit tests
+* mock tests
+* configuration tests
+* static validation
+* isolated tests
+
+Do NOT manipulate the real Windows Virtual Desktop environment.
+
+---
+
+## PHASE 9 — FINAL REVIEW
+
+Perform a production-readiness review.
+
+Check every requirement in this prompt.
+
+Create:
+
+`docs/final-review.md`
+
+Mark each requirement:
+
+```text
+PASS
+PARTIAL
+NOT IMPLEMENTED
+UNSUPPORTED
+```
+
+Do not mark something PASS merely because the UI exists.
+
+---
+
+# 145. REQUIREMENT TRACEABILITY
+
+Create:
+
+`docs/requirements-traceability.md`
+
+Map requirements to:
+
+```text
+Requirement
+Implementation
+Source File
+Test
+Status
+```
+
+Example:
+
+```text
+REQ-VD-001
+Detect Virtual Desktops
+providers/virtual_desktop.py
+tests/test_virtual_desktop.py
+PASS
+```
+
+This prevents requirements from silently being forgotten.
+
+---
+
+# 146. NO HIDDEN TODOs
+
+Before completion, search the project for:
+
+```text
+TODO
+FIXME
+pass
+NotImplemented
+stub
+mock success
+fake
+placeholder
+coming soon
+```
+
+Any remaining item must be explicitly documented.
+
+Do not declare production-ready while critical functionality is stubbed.
+
+---
+
+# 147. NO FAKE SUCCESS
+
+Never write:
+
+```text
+SUCCESS
+```
+
+unless the underlying operation actually succeeded.
+
+Never write:
+
+```text
+Desktop created
+```
+
+if creation was only requested but not verified when verification is available.
+
+Use:
+
+```text
+REQUESTED
+```
+
+or:
+
+```text
+UNVERIFIED
+```
+
+where appropriate.
+
+---
+
+# 148. FINAL ACCEPTANCE CHECKLIST
+
+Before completion verify:
+
+* [ ] Application builds
+* [ ] UI is complete
+* [ ] Configuration persists
+* [ ] Multiple applications per desktop work
+* [ ] Applications can be added without code changes
+* [ ] Applications can be reassigned
+* [ ] Applications can be removed without uninstalling
+* [ ] Profiles work
+* [ ] Import/export works
+* [ ] Dry Run works
+* [ ] Launch Workspace works architecturally
+* [ ] Sync Workspace works architecturally
+* [ ] Duplicate prevention exists
+* [ ] Desktop identity is handled safely
+* [ ] Window matching is robust
+* [ ] Cancellation exists
+* [ ] Single-instance protection exists
+* [ ] Concurrency is controlled
+* [ ] Logs work
+* [ ] Diagnostics work
+* [ ] Configuration backups work
+* [ ] Validation works
+* [ ] API capabilities are detected
+* [ ] Windows limitations are documented
+* [ ] No automatic elevation
+* [ ] No destructive operations
+* [ ] No automatic startup unless explicitly enabled
+* [ ] No telemetry
+* [ ] No network dependency
+* [ ] Security review completed
+* [ ] Tests completed
+* [ ] Static review completed
+* [ ] Documentation completed
+* [ ] Application has NOT been launched
+
+---
+
+# 149. REQUIRED DELIVERABLES
+
+Provide:
+
+## Application
+
+Complete production-oriented source code.
+
+## UI
+
+Complete functional GUI.
+
+## Configuration
+
+Default workspace configuration.
+
+## Tests
+
+Unit and mock integration tests.
+
+## Documentation
+
+* README.md
+* architecture.md
+* requirements-analysis.md
+* technology-decision.md
+* configuration-schema.md
+* windows-api-compatibility.md
+* safety-review.md
+* security-review.md
+* troubleshooting.md
+* final-review.md
+* requirements-traceability.md
+
+## Dependency Information
+
+Dependency file with versions.
+
+## Packaging
+
+Instructions for creating a Windows executable/package.
+
+## Diagnostics
+
+Diagnostic-report functionality.
+
+## Logs
+
+Structured logging.
+
+---
+
+# 150. FINAL OUTPUT TO ME
+
+After completing the project, report:
 
 1. Project structure
 2. Files created
-3. Dependencies
-4. Installation instructions
-5. Configuration instructions
-6. Testing results
-7. Known Windows/API limitations
-8. Security/safety review
-9. How to package the application
-10. How to run it manually
+3. Technology selected
+4. Why it was selected
+5. Dependencies
+6. API/library versions
+7. Windows compatibility
+8. Implemented features
+9. Tests created
+10. Tests executed
+11. Static validation results
+12. Security review results
+13. Known limitations
+14. Unsupported Windows features
+15. Packaging instructions
+16. Manual run instructions
+17. Configuration location
+18. Log location
+19. Diagnostic instructions
+20. Remaining issues, if any
+
+Do NOT claim the application was tested interactively if it was not launched.
+
+Clearly distinguish:
+
+```text
+Static Validation
+Mock Testing
+Real Windows Testing
+```
+
+---
+
+# 151. MOST IMPORTANT RULES
+
+These rules override convenience.
+
+1. **NEVER run the generated application during development unless I explicitly authorize it.**
+2. **NEVER launch my configured applications during development.**
+3. **NEVER create or modify my real Virtual Desktop workspace during development.**
+4. **NEVER automatically delete Virtual Desktops.**
+5. **NEVER automatically kill application processes.**
+6. **NEVER uninstall applications.**
+7. **NEVER delete user files.**
+8. **NEVER modify development data.**
+9. **NEVER silently elevate to Administrator.**
+10. **NEVER silently create startup automation.**
+11. **NEVER silently modify Windows security settings.**
+12. **NEVER claim an operation succeeded without appropriate verification.**
+13. **NEVER rely entirely on keyboard simulation when a reliable API is available.**
+14. **NEVER assume a process is equivalent to a window.**
+15. **NEVER trust stale HWNDs or PIDs without revalidation.**
+16. **NEVER hard-code application paths as the only discovery mechanism.**
+17. **NEVER limit a desktop to one application.**
+18. **NEVER require source-code changes to add applications.**
+19. **NEVER overwrite configuration without validation and safe persistence.**
+20. **NEVER import and automatically execute a workspace.**
+21. **NEVER launch the workspace merely because the manager starts.**
+22. **NEVER create duplicate manager instances unnecessarily.**
+23. **NEVER allow concurrent workspace executions.**
+24. **NEVER allow one failed application to unnecessarily destroy the whole operation.**
+25. **NEVER use unsafe arbitrary shell commands.**
+26. **NEVER add telemetry without explicit approval.**
+27. **NEVER add an automatic updater in Version 1.**
+28. **NEVER hide unsupported API functionality.**
+29. **NEVER create fake UI functionality.**
+30. **NEVER sacrifice safety for automation.**
+31. **NEVER sacrifice reliability for visual effects.**
+32. **NEVER treat Windows desktop positions as permanently stable identities.**
+33. **NEVER automatically switch the user's desktop unless required and explicitly handled.**
+34. **NEVER fight the user indefinitely when they manually change application state.**
+35. **NEVER run the finished application until I explicitly tell you to run it.**
+
+---
+
+# 152. FINAL INSTRUCTION TO GOOGLE ANTIGRAVITY
+
+Start by analyzing this entire specification.
+
+Do not immediately execute the application.
+
+First create the design and architecture documentation.
+
+Then implement the application.
+
+Then perform static validation and safe mocked tests.
+
+Do not launch the application.
+
+Do not manipulate my real Windows Virtual Desktops.
+
+Do not launch Brave.
+
+Do not launch Google Antigravity.
+
+Do not launch SSMS.
+
+Do not launch Postman.
+
+Do not launch Docker.
+
+Do not launch Visual Studio.
+
+Do not launch VS Code.
+
+Do not create startup automation.
+
+Do not modify my Windows workspace.
+
+Do not perform real workspace execution.
+
+Every functional UI control must connect to real application logic.
+
+Every unsupported feature must be clearly identified.
+
+Every important Windows API limitation must be documented.
+
+Every safety-sensitive action must require the appropriate explicit user authorization.
+
+When implementation and safe validation are complete, stop.
+
+Report the project status.
+
+Then wait.
 
 **DO NOT RUN THE APPLICATION.**
 
-Wait for my explicit instruction before executing the generated workspace manager.
+**DO NOT RUN THE WORKSPACE.**
+
+**WAIT FOR MY EXPLICIT INSTRUCTION BEFORE EXECUTING ANY REAL WORKSPACE OPERATION.**
