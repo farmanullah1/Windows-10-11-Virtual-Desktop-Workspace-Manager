@@ -47,3 +47,9 @@ def test_parse_args_profile():
     with patch.object(sys, "argv", ["main.py", "--profile", "CustomDev"]):
         args = parse_args()
         assert args.profile == "CustomDev"
+
+
+def test_parse_args_health_check():
+    with patch.object(sys, "argv", ["main.py", "--health-check"]):
+        args = parse_args()
+        assert args.health_check is True

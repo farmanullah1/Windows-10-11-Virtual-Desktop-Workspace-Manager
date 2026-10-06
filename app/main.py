@@ -32,6 +32,7 @@ def parse_args():
     parser.add_argument("--profile", type=str, default=None, help="Target profile ID or name to activate")
     parser.add_argument("--create-shortcuts", action="store_true", help="Create owned desktop shortcuts (Configure and Run Workspace)")
     parser.add_argument("--remove-shortcuts", action="store_true", help="Remove owned desktop shortcuts cleanly")
+    parser.add_argument("--health-check", action="store_true", help="Run 8-point system diagnostic health check and exit")
     parser.add_argument("--no-prompt", action="store_true", help="Skip launch confirmation prompt when running with --run")
     parser.add_argument("--headless", action="store_true", help="Execute in headless mode without GUI popups")
     return parser.parse_args()
@@ -60,6 +61,18 @@ def main():
     logger.info("Virtual Desktop Workspace Manager initialized.")
 
     manager = WorkspaceManager(config_store=store)
+
+    # Health check diagnostics (Section 113)
+    if args.health_check:
+        from app.services.diagnostics_service import DiagnosticsService
+        diag = DiagnosticsService(
+            config=manager.config,
+            desktop_provider=manager.desktop_provider,
+            process_provider=manager.process_provider,
+            window_provider=manager.window_provider,
+        )
+        print(diag.format_health_check_summary())
+        sys.exit(0)
 
     # 1. Shortcut management commands
     if args.create_shortcuts:
