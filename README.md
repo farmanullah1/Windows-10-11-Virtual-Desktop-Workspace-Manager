@@ -3,7 +3,7 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
 [![Platform Windows](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011%20(64--bit)-0078d4.svg)](https://microsoft.com)
 [![License MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests Passing](https://img.shields.io/badge/tests-53%20passed-brightgreen.svg)](tests/)
+[![Tests Passing](https://img.shields.io/badge/tests-55%20passed-brightgreen.svg)](tests/)
 
 A production-quality utility for **Windows 10 and Windows 11** that manages Windows Virtual Desktops and organizes your applications into persistent, customized virtual workspaces. Applications are automatically launched or moved to designated virtual desktops with zero destructive behavior, failure isolation, and transparent observability.
 
@@ -47,7 +47,7 @@ A production-quality utility for **Windows 10 and Windows 11** that manages Wind
 
 ---
 
-## 4. Installation
+## 4. Installation & Setup
 
 1. Clone or download the repository:
 
@@ -62,25 +62,31 @@ A production-quality utility for **Windows 10 and Windows 11** that manages Wind
    pip install -r requirements.txt
    ```
 
-3. (Optional) Install in development mode:
+3. (Optional) Install in development mode via modern `pyproject.toml`:
 
    ```cmd
    pip install -e .
    ```
 
-### 4.1 System Setup & Bootstrap Runner (`run.py`)
+### 4.1 System Setup & Bootstrap Runner (`setup.py`)
 
-For automated, idempotent environment initialization and shortcut setup, use the root-level setup runner:
+As specified in **Section 83B**, `setup.py` is the **single supported setup entry point** for configuring the application environment and creating desktop shortcuts on Windows 10/11.
+
+> **Note on Architecture:** Unlike legacy Python packaging metadata files, `setup.py` in this project is an executable setup and bootstrap program (standard package build metadata is maintained in `pyproject.toml`).
+
+Run setup using:
 
 ```cmd
-python run.py             # Perform complete idempotent setup
-python run.py --setup     # Explicit setup mode
-python run.py --check     # Non-destructive diagnostics (makes zero system changes)
-python run.py --repair    # Verify and repair application-owned shortcuts and folders
-python run.py --version   # Display setup runner version
+python setup.py             # Perform complete idempotent setup
+python setup.py --setup     # Explicit setup mode
+python setup.py --check     # Non-destructive diagnostics (makes zero system changes)
+python setup.py --repair    # Verify and repair application-owned shortcuts and folders
+python setup.py --version   # Display setup runner version
 ```
 
-> **Strict Guarantee (Section 83B):** `run.py` is exclusively a setup and bootstrap tool. It **never** executes the workspace, never launches configured applications, and never manipulates Windows Virtual Desktops.
+*For backward compatibility, `python run.py` is also provided as a transparent forwarder to `setup.py`.*
+
+> **Strict Guarantee (Sections 83B, 151):** `setup.py` is exclusively a setup and bootstrap program. It **never** executes the workspace, never launches configured applications, and never manipulates Windows Virtual Desktops.
 
 ---
 
@@ -332,7 +338,7 @@ Output executable will be in `dist/VirtualDesktopWorkspaceManager.exe`. See [doc
 
 ## 18. Automated Test Suite
 
-The application includes a comprehensive test suite of **53 unit, integration, acceptance, and setup tests**:
+The application includes a comprehensive test suite of **55 unit, integration, acceptance, and setup tests**:
 
 ```cmd
 python -m pytest -v

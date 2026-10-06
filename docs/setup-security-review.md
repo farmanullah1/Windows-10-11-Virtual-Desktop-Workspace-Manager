@@ -2,7 +2,7 @@
 
 ## 1. Executive Summary
 
-This document evaluates the security architecture, threat model, and safety boundaries of the **Virtual Desktop Workspace Manager** setup and bootstrap mechanism (`run.py`), as specified in Section 83B through 83G of the engineering requirements.
+This document evaluates the security architecture, threat model, and safety boundaries of the **Virtual Desktop Workspace Manager** setup and bootstrap mechanism (`setup.py`), as specified in Section 83B through 83G of the engineering requirements.
 
 The setup process prepares the application environment on Windows 10 and Windows 11 without executing application workspaces, launching third-party processes, modifying host virtual desktops, or escalating privileges.
 
@@ -12,9 +12,9 @@ The setup process prepares the application environment on Windows 10 and Windows
 
 | Threat / Risk | Severity | Mitigation & Architecture Enforcement |
 | :--- | :--- | :--- |
-| **Accidental Workspace Execution** | Critical | `run.py` contains **zero** workspace execution logic, process launcher calls, or window movement APIs. It cannot launch applications or alter virtual desktops. |
+| **Accidental Workspace Execution** | Critical | `setup.py` contains **zero** workspace execution logic, process launcher calls, or window movement APIs. It cannot launch applications or alter virtual desktops. |
 | **Privilege Escalation Abuse** | High | The setup runner operates entirely under **Standard User (Medium Integrity)** permissions. No `runas`, UAC triggers, or auto-elevation requests are made. |
-| **Dependency Supply-Chain Tampering** | High | Dependencies are strictly pinned and declared in `requirements.txt`. `run.py` never accepts arbitrary package names from untrusted configuration or remote endpoints. |
+| **Dependency Supply-Chain Tampering** | High | Dependencies are strictly pinned and declared in `requirements.txt`. `setup.py` never accepts arbitrary package names from untrusted configuration or remote endpoints. |
 | **Destructive Shortcut Deletion** | High | `ShortcutService` uses deterministic names and ownership checks. Setup repair and uninstallation routines touch **only** application-owned shortcuts. Unrelated desktop shortcuts are never touched. |
 | **User Configuration Overwrite** | High | Setup initializes `workspace.json` only if it does not already exist. Existing valid configurations and profiles are validated and preserved intact. |
 | **State File Pollution** | Medium | Setup metadata is isolated in `%APPDATA%\VirtualDesktopWorkspaceManager\state\setup.json`, strictly separated from operational workspace configurations. |
@@ -27,7 +27,7 @@ The setup process prepares the application environment on Windows 10 and Windows
 
 ### 3.1 Standard User (Medium Integrity)
 
-`run.py` adheres to the principle of least privilege:
+`setup.py` adheres to the principle of least privilege:
 
 ```text
 Host Environment (Windows 10/11)
@@ -64,7 +64,7 @@ The setup process creates exactly two user-facing desktop shortcuts:
 ### 4.1 Ownership Rules
 
 * **Deterministic File Naming**: Shortcuts are named `Virtual Desktop Workspace Manager — Configure.lnk` and `Virtual Desktop Workspace Manager — Run Workspace.lnk`.
-* **Safe Repair**: Running `run.py --repair` verifies target existence and recreates missing owned shortcuts without generating duplicates or altering unrelated `.lnk` files on the user's desktop.
+* **Safe Repair**: Running `setup.py --repair` verifies target existence and recreates missing owned shortcuts without generating duplicates or altering unrelated `.lnk` files on the user's desktop.
 * **Safe Uninstallation**: Removal routines filter strictly on owned filenames, ensuring complete safety for user desktop icons.
 
 ---
@@ -81,10 +81,10 @@ The setup process creates exactly two user-facing desktop shortcuts:
 The setup runner provides non-destructive inspection modes:
 
 ```cmd
-python run.py --check       # Non-destructive diagnostics (makes 0 changes)
-python run.py --version     # Displays setup runner version
-python run.py --help        # Displays supported CLI commands
-python run.py --repair      # Repairs only application-owned shortcuts and folders
+python setup.py --check       # Non-destructive diagnostics (makes 0 changes)
+python setup.py --version     # Displays setup runner version
+python setup.py --help        # Displays supported CLI commands
+python setup.py --repair      # Repairs only application-owned shortcuts and folders
 ```
 
 All commands return `0` on success and non-zero exit codes on failure, enabling automated validation and CI/CD integration.

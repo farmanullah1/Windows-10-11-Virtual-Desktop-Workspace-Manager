@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "virtual-desktop-workspace-manager"
+version = "1.0.0"
+description = "Production Windows 10/11 Virtual Desktop Workspace Manager"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "Production Engineering Team" }
+]
+dependencies = [
+    "pyvda>=0.6.0",
+    "pywin32>=306",
+    "psutil>=5.9.0",
+    "comtypes>=1.4.0",
+    "pystray>=0.19.5",
+    "Pillow>=10.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pyinstaller>=6.0.0",
+]
+
+[project.scripts]
+vdwm = "app.main:main"
+vdwm-configure = "configure:main"
+vdwm-run = "run_workspace:main"
+
+[project.gui-scripts]
+vdwm-gui = "app.main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
