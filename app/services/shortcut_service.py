@@ -93,6 +93,10 @@ class ShortcutService:
             run_args = f'"{main_script}" --run'
             work_dir = base_dir
 
+        config_ico = base_dir / "assets" / "VirtualDesktopWorkspaceManager_Configure.ico"
+        run_ico = base_dir / "assets" / "VirtualDesktopWorkspaceManager_Run.ico"
+        default_ico = base_dir / "assets" / "VirtualDesktopWorkspaceManager.ico"
+
         try:
             import win32com.client
             shell = win32com.client.Dispatch("WScript.Shell")
@@ -103,6 +107,10 @@ class ShortcutService:
             sc_config.Arguments = config_args
             sc_config.WorkingDirectory = str(work_dir)
             sc_config.Description = "Open Virtual Desktop Workspace Manager Configuration & Settings"
+            if config_ico.exists():
+                sc_config.IconLocation = f"{config_ico},0"
+            elif default_ico.exists():
+                sc_config.IconLocation = f"{default_ico},0"
             sc_config.Save()
             results["config"] = True
             self.logger.info("Created Desktop shortcut: %s", paths["config"].name)
@@ -113,6 +121,10 @@ class ShortcutService:
             sc_run.Arguments = run_args
             sc_run.WorkingDirectory = str(work_dir)
             sc_run.Description = "Launch and organize Virtual Desktop Workspace applications"
+            if run_ico.exists():
+                sc_run.IconLocation = f"{run_ico},0"
+            elif default_ico.exists():
+                sc_run.IconLocation = f"{default_ico},0"
             sc_run.Save()
             results["run"] = True
             self.logger.info("Created Desktop shortcut: %s", paths["run"].name)
