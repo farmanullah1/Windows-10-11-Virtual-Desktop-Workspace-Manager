@@ -10,7 +10,7 @@ import time
 import shutil
 import tempfile
 from pathlib import Path
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Union
 from app.models.workspace import WorkspaceConfig, WorkspaceProfile
 from app.models.history import OperationHistoryRecord
 from app.configuration.validator import ConfigValidator, ConfigValidationError
@@ -32,8 +32,8 @@ def get_default_config_dir() -> Path:
 class ConfigStore:
     """Handles loading, saving, backing up, and importing/exporting configuration."""
 
-    def __init__(self, config_dir: Optional[Path] = None):
-        self.config_dir = config_dir if config_dir else get_default_config_dir()
+    def __init__(self, config_dir: Optional[Union[Path, str]] = None):
+        self.config_dir = Path(config_dir) if config_dir else get_default_config_dir()
         self.config_file = self.config_dir / "workspace.json"
         self.backup_file = self.config_dir / "workspace.backup.json"
         self.backup_dir = self.config_dir / "backups"

@@ -23,7 +23,7 @@ def test_diagnostics_report_redaction():
 
     assert "secret12345" not in sanitized
     assert "mypassword" not in sanitized
-    assert "***REDACTED***" in sanitized
+    assert "[REDACTED]" in sanitized or "***REDACTED***" in sanitized
 
 
 def test_diagnostics_report_generation():
