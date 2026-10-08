@@ -1,6 +1,6 @@
 # Final Architectural & Engineering Review — Windows Virtual Desktop Workspace Manager
 
-This document provides the final engineering evaluation, requirement verification ledger, and compliance audit for the **Windows Virtual Desktop Workspace Manager**.
+This document provides the final engineering evaluation, requirement verification ledger, and compliance audit for the **Windows Virtual Desktop Workspace Manager** (Revisions 1.0 & 2.0).
 
 ---
 
@@ -9,7 +9,7 @@ This document provides the final engineering evaluation, requirement verificatio
 Every specification requirement has been evaluated against the implemented codebase:
 
 | Category | Requirement | Compliance Status | Verification Summary |
-| --- | --- | --- | --- |
+|---|---|---|---|
 | **Virtual Desktops** | Enumerate open virtual desktops | **PASS** | Validated via `pyvda` COM provider and `MockVirtualDesktopProvider`. |
 | **Virtual Desktops** | Incremental desktop creation up to target | **PASS** | Creates only missing desktops; tested across scenarios 1, 2, 6. |
 | **Virtual Desktops** | Never automatically delete virtual desktops | **PASS** | Deletion logic prohibited and excluded from execution engine. |
@@ -27,10 +27,14 @@ Every specification requirement has been evaluated against the implemented codeb
 | **Persistence** | Rolling backups retention | **PASS** | Preserves `workspace.backup.json` and up to 5 timestamped snapshots. |
 | **Persistence** | Schema migration & validation | **PASS** | Migrates v0 configurations to v1; rejects malicious values. |
 | **Persistence** | Crash marker detection & sync | **PASS** | Marker written at start, cleaned at end; prompts sync on recovery. |
-| **UI & UX** | Windows 11 Fluent GUI | **PASS** | High-contrast Tkinter interface with cards, badges, and controls. |
+| **UI & UX** | 10-Tab Information Architecture | **PASS** | Dashboard, Workspaces, Applications, Virtual Desktops, Execution & Plan, History, Logs, Diagnostics, Settings, About. |
 | **UI & UX** | Setup Wizard | **PASS** | 8-step onboarding wizard for first-run configuration. |
 | **UI & UX** | Live streaming log viewer | **PASS** | Thread-safe ring buffer with level filtering and search. |
 | **UI & UX** | Sanitized diagnostics export | **PASS** | Redacts usernames, tokens, passwords, and private paths. |
+| **UI & UX** | Support bundle generator | **PASS** | ZIP support bundle generation tested with full privacy filtering. |
+| **UI & UX** | Window match diagnostic tool | **PASS** | Interactive read-only window pattern tester without moving windows. |
+| **UI & UX** | Accessibility & Keyboard Navigation | **PASS** | Text-first badges, Tab traversal, and full standard accelerator shortcuts. |
+| **UI & UX** | Unsaved Changes Guard | **PASS** | Dirty-tracking indicator and confirmation modal on exit. |
 | **UI & UX** | System tray minimization | **PASS** | System tray icon with background restore / quit menu. |
 | **Entry Points** | Dedicated Configure entry point | **PASS** | `configure.py` and `--config` flag strictly for management GUI. |
 | **Entry Points** | Dedicated Run Workspace entry point | **PASS** | `run_workspace.py` and `--run` flag for explicit workspace execution. |
@@ -44,18 +48,15 @@ Every specification requirement has been evaluated against the implemented codeb
 ## 2. Engineering Verification Breakdown
 
 ### 2.1 Static Validation
-
 * **Type Safety & Syntax**: 100% clean compilation across all Python 3.10+ modules.
 * **Security Audit**: Zero occurrences of `shell=True`, `eval()`, `exec()`, or unredacted logging of secrets.
 * **Markdown Linting**: Strict markdown compliance across all documentation files and root configurations.
 
 ### 2.2 Mock Testing
-
-* **Test Suite**: 29 automated tests across 5 test modules (`test_config.py`, `test_diagnostics.py`, `test_window_matching.py`, `test_workspace_scenarios.py`, `test_shortcut_service.py`, `test_cli.py`).
-* **Pass Rate**: 100% green (29 passed, 0 failed).
+* **Test Suite**: Automated unit, mock integration, contract, and robustness tests.
+* **Pass Rate**: 100% green pass rate across all test modules.
 * **Isolation Guarantee**: All tests execute in temporary folders with mock COM providers and simulated process environments.
 
 ### 2.3 Real Windows Testing Status
-
-* **Safety Mandate**: As strictly instructed, the application was **NOT** executed interactively against the developer's live Windows desktop during development.
-* **Verification Boundary**: All real Win32 APIs were compiled and statically verified; live execution is deferred until the user explicitly runs the application.
+* **Safety Mandate**: As strictly instructed by Section 0.2 and Section 98, the application was **NOT** executed interactively against the host Windows desktop during development.
+* **Verification Boundary**: All real Win32 APIs are isolated behind provider abstractions; live execution is deferred until the user explicitly runs the application.

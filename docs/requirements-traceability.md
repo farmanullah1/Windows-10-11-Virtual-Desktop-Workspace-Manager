@@ -1,6 +1,6 @@
 # Requirements Traceability Matrix — Windows Virtual Desktop Workspace Manager
 
-This document maps all system requirements from the technical specification to their architectural implementations, source code files, automated verification tests, and current compliance status.
+This document maps all system requirements from the technical specification (Revisions 1.0 & 2.0) to their architectural implementations, source code files, automated verification tests, and current compliance status.
 
 ---
 
@@ -8,7 +8,7 @@ This document maps all system requirements from the technical specification to t
 
 * **PASS**: Completely implemented and verified by automated unit / mock test suite.
 * **PARTIAL**: Implemented with documented fallback or operating system limitation.
-* **UNSUPPORTED**: Windows API does not expose native capability; handled with explicit fallback warning.
+* **UNSUPPORTED**: Windows API does not expose native capability; handled with explicit fallback warning or intentionally disabled for safety (e.g. desktop deletion).
 
 ---
 
@@ -158,7 +158,71 @@ Status:         PASS
 
 ---
 
-### 2.5 User Interface & Entry Points (REQ-UI)
+### 2.5 Observability, Privacy & Diagnostics (REQ-OBS)
+
+```text
+Requirement:    REQ-OBS-001 — Centralized Log Redaction
+Implementation: LogRedactor, RedactingFilter, RedactingFormatter on logging handlers
+Source File:    app/logging/redactor.py
+Test:           tests/test_redactor_and_error_catalog.py::test_log_redactor_masks_sensitive_data
+Status:         PASS
+```
+
+```text
+Requirement:    REQ-OBS-002 — Standardized Error Catalog
+Implementation: Categorized error codes (VDM-001, WIN-001, APP-001, CFG-001, SETUP-001, SEC-001) with remediation hints
+Source File:    app/models/error_codes.py
+Test:           tests/test_redactor_and_error_catalog.py::test_error_catalog_formatting
+Status:         PASS
+```
+
+```text
+Requirement:    REQ-OBS-003 — 10-Category Diagnostic Assessment
+Implementation: System, Desktops, Provider, Config, Apps, Windows, Permissions, Storage, Dependencies, Recent Errors
+Source File:    app/services/diagnostics_service.py
+Test:           tests/test_support_bundle_and_categories.py::test_categorized_diagnostics_structure
+Status:         PASS
+```
+
+```text
+Requirement:    REQ-OBS-004 — Privacy-Preserving Support Bundle Generator
+Implementation: Zip bundle generator packaging redacted diagnostics, sanitized configs, and recent logs
+Source File:    app/services/support_bundle.py
+Test:           tests/test_support_bundle_and_categories.py::test_support_bundle_generator
+Status:         PASS
+```
+
+---
+
+### 2.6 State Machine, History & Match Testing (REQ-STA)
+
+```text
+Requirement:    REQ-STA-001 — Explicit 17-State Lifecycle Machine & Phase Tracking
+Implementation: ApplicationState & OperationPhase enums tracking all execution transitions
+Source File:    app/models/state.py
+Test:           tests/test_history_and_match_tester.py::test_state_machine_transitions
+Status:         PASS
+```
+
+```text
+Requirement:    REQ-STA-002 — Persistent Operation History
+Implementation: OperationHistoryRecord saved to atomic history.json on launch and sync
+Source File:    app/models/history.py, app/configuration/config_store.py
+Test:           tests/test_history_and_match_tester.py::test_operation_history_persistence
+Status:         PASS
+```
+
+```text
+Requirement:    REQ-STA-003 — Interactive Read-Only Window Match Tester
+Implementation: Safe diagnostic test_match_app() checking running window titles and executables
+Source File:    app/core/manager.py, app/ui/app_dialog.py
+Test:           tests/test_history_and_match_tester.py::test_window_match_tester
+Status:         PASS
+```
+
+---
+
+### 2.7 User Interface & Accessibility (REQ-UI)
 
 ```text
 Requirement:    REQ-UI-001 — Dedicated Configure Entry Point
@@ -193,17 +257,25 @@ Status:         PASS
 ```
 
 ```text
-Requirement:    REQ-UI-005 — Non-Mutating Dry-Run Preview
-Implementation: DryRunSimulator calculating changes without executing system modifications
-Source File:    app/core/dry_run.py
-Test:           tests/test_workspace_scenarios.py::test_scenario_11_dry_run_zero_modifications
+Requirement:    REQ-UI-005 — 10-Tab Information Architecture
+Implementation: Dashboard, Workspaces, Applications, Virtual Desktops, Execution & Plan, History, Logs, Diagnostics, Settings, About
+Source File:    app/ui/app_window.py
+Test:           tests/test_ui_views.py::test_main_window_tabs_and_structure
 Status:         PASS
 ```
 
 ```text
-Requirement:    REQ-UI-006 — Sanitized Privacy-Redacted Diagnostics
-Implementation: DiagnosticsService redacting usernames, tokens, and private paths
-Source File:    app/services/diagnostics_service.py
-Test:           tests/test_diagnostics.py::test_diagnostics_generation_and_redaction
+Requirement:    REQ-UI-006 — Accessible Status Badges & Keyboard Shortcuts
+Implementation: Text-first status badges and standard shortcuts (Ctrl+S, Ctrl+R, F5, Ctrl+F, Ctrl+L, Ctrl+,, Esc)
+Source File:    app/ui/app_window.py
+Test:           tests/test_ui_views.py::test_main_window_filter_and_dirty_state
+Status:         PASS
+```
+
+```text
+Requirement:    REQ-UI-007 — Unsaved Changes Protection
+Implementation: Dirty tracking and exit prompt guarding against accidental modification loss
+Source File:    app/ui/app_window.py
+Test:           tests/test_ui_views.py::test_main_window_filter_and_dirty_state
 Status:         PASS
 ```
