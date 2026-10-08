@@ -347,22 +347,25 @@ class MainWindow(tk.Tk):
         self.lbl_app_count.pack(side=tk.RIGHT, padx=4)
         ttk.Button(filter_bar, text="+ Add Application", command=lambda: self._open_add_app_dialog()).pack(side=tk.RIGHT, padx=4)
 
-        # Applications Treeview Table
-        cols = ("status", "name", "desktop", "mode", "policy", "executable")
+        cols = ("status", "name", "desktop", "monitor", "snap", "mode", "policy", "executable")
         self.app_tree = ttk.Treeview(tab, columns=cols, show="headings", height=16)
         self.app_tree.heading("status", text="Status")
         self.app_tree.heading("name", text="Application Name")
         self.app_tree.heading("desktop", text="Assigned Desktop")
+        self.app_tree.heading("monitor", text="Monitor")
+        self.app_tree.heading("snap", text="Layout Snap")
         self.app_tree.heading("mode", text="Launch Mode")
         self.app_tree.heading("policy", text="Window Policy")
         self.app_tree.heading("executable", text="Executable Path")
 
         self.app_tree.column("status", width=80, anchor=tk.CENTER)
-        self.app_tree.column("name", width=180)
-        self.app_tree.column("desktop", width=140)
-        self.app_tree.column("mode", width=140)
-        self.app_tree.column("policy", width=140)
-        self.app_tree.column("executable", width=300)
+        self.app_tree.column("name", width=170)
+        self.app_tree.column("desktop", width=130)
+        self.app_tree.column("monitor", width=80, anchor=tk.CENTER)
+        self.app_tree.column("snap", width=100, anchor=tk.CENTER)
+        self.app_tree.column("mode", width=120)
+        self.app_tree.column("policy", width=120)
+        self.app_tree.column("executable", width=260)
 
         tree_scroll = ttk.Scrollbar(tab, orient=tk.VERTICAL, command=self.app_tree.yview)
         self.app_tree.configure(yscrollcommand=tree_scroll.set)
@@ -899,11 +902,23 @@ class MainWindow(tk.Tk):
 
             dt_name = next((d.name for d in profile.desktops if d.number == app.desktop), f"Desktop {app.desktop}")
 
+            snap_label = getattr(app, "window_snap", "default").replace("_", " ").title()
+            mon_label = f"Mon {getattr(app, 'monitor_index', 0)}"
+
             self.app_tree.insert(
                 "",
                 tk.END,
                 iid=app.id,
-                values=(stat_str, app.name, f"Desktop {app.desktop} ({dt_name})", app.launch_mode, app.window_policy, app.executable)
+                values=(
+                    stat_str,
+                    app.name,
+                    f"Desktop {app.desktop} ({dt_name})",
+                    mon_label,
+                    snap_label,
+                    app.launch_mode,
+                    app.window_policy,
+                    app.executable
+                )
             )
             displayed += 1
 
@@ -1334,13 +1349,23 @@ class MainWindow(tk.Tk):
         target = filedialog.asksaveasfilename(
             parent=self,
             title=f"Export Profile '{prof.name}'",
-            defaultextension=".json",
-            filetypes=[("JSON Files", "*.json")],
-            initialfile=f"{prof.name.lower().replace(' ', '_')}_profile.json"
+            defaultextension=".vdwm",
+            filetypes=[("Workspace Bundles", "*.vdwm"), ("JSON Files", "*.json")],
+            initialfile=f"{prof.name.lower().replace(' ', '_')}.vdwm"
         )
         if target:
-            self.manager.config_store.export_profile(prof, Path(target))
-            messagebox.showinfo("Exported", f"Profile exported to {target}", parent=self)
+            from tkinter import simpledialog
+            from app.services.profile_sharing import ProfileSharingService
+            passcode = simpledialog.askstring(
+                "Encrypt Profile (Optional)",
+                "Enter a passcode to encrypt this profile for secure team sharing\n(leave blank for plain export):",
+                parent=self,
+                show="*"
+            )
+            sharing = ProfileSharingService()
+            sharing.export_profile(prof, Path(target), passcode=passcode or None)
+            enc_msg = " (Encrypted with passcode)" if passcode else ""
+            messagebox.showinfo("Exported", f"Profile exported successfully to:\n{target}{enc_msg}", parent=self)
 
     def _import_profile(self) -> None:
         if not self._check_unsaved_changes():
@@ -1348,11 +1373,30 @@ class MainWindow(tk.Tk):
         source = filedialog.askopenfilename(
             parent=self,
             title="Import Workspace Profile",
-            filetypes=[("JSON Files", "*.json")]
+            filetypes=[("Workspace Bundles & JSON", "*.vdwm;*.json"), ("All Files", "*.*")]
         )
         if source:
             try:
-                prof = self.manager.config_store.import_profile(Path(source))
+                from tkinter import simpledialog
+                from app.services.profile_sharing import ProfileSharingService
+                sharing = ProfileSharingService()
+
+                # Check if file is encrypted
+                with open(source, "r", encoding="utf-8") as f:
+                    content_preview = f.read(200)
+
+                passcode = None
+                if "vdwm_encrypted" in content_preview:
+                    passcode = simpledialog.askstring(
+                        "Encrypted Profile Bundle",
+                        "This profile bundle is passcode-protected.\nPlease enter the passcode to decrypt:",
+                        parent=self,
+                        show="*"
+                    )
+                    if not passcode:
+                        return
+
+                prof = sharing.import_profile(Path(source), passcode=passcode)
                 existing = [p for p in self.manager.config.profiles if p.id == prof.id]
                 if existing:
                     import uuid
@@ -1361,7 +1405,7 @@ class MainWindow(tk.Tk):
                 self.manager.config.general.active_profile_id = prof.id
                 self.manager.save_config()
                 self._refresh_all_views()
-                messagebox.showinfo("Imported", f"Profile '{prof.name}' successfully imported!", parent=self)
+                messagebox.showinfo("Imported", f"Profile '{prof.name}' successfully imported and activated!", parent=self)
             except Exception as ex:
                 messagebox.showerror("Import Error", f"Failed to import profile: {ex}", parent=self)
 
