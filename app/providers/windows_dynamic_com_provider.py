@@ -16,7 +16,7 @@ from app.providers.base import (
     DesktopInfo,
 )
 from app.providers.windows_vda_provider import WindowsVdaProvider
-from app.providers.official_com_provider import OfficialComProvider
+from app.providers.official_com_provider import OfficialComDesktopManager
 from app.providers.keyboard_fallback_provider import KeyboardFallbackProvider
 from app.logging.logger import get_logger
 
