@@ -4,6 +4,28 @@ All notable changes to the Windows Virtual Desktop Workspace Manager project are
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-10-08
+
+### Added
+- **Multi-Monitor Display Awareness & Window Geometry Snapping / Tiling**:
+  - `IWindowProvider` and `WindowService` enhanced with multi-monitor enumeration (`EnumDisplayMonitors`, `GetMonitorInfo` with work area) and geometry tiling (`SetWindowPos`).
+  - Added `WindowSnap` enum (`DEFAULT`, `MAXIMIZE`, `MINIMIZE`, `LEFT_HALF`, `RIGHT_HALF`, `TOP_HALF`, `BOTTOM_HALF`, `CENTER`, `CUSTOM`).
+  - `AppConfig` expanded with `monitor_index`, `window_snap`, and `custom_rect` fields.
+  - `ExecutionPlan` integrates monitor & snap placement immediately after desktop window assignment.
+  - Applications table UI and `AppDialog` include Target Monitor and Layout Snap configuration and indicators.
+- **Hardware & Session Event Listener / Auto-Triggering Engine**:
+  - `TriggerEngine` background daemon thread monitoring hardware display topology changes (`ON_DISPLAY_CHANGE`), scheduled wall-clock times (`ON_TIME_SCHEDULE`), and session startup (`ON_STARTUP`).
+  - Robust cooldown guards and `automation_enabled` safety controls to prevent duplicate activations.
+  - Profile models updated with `ProfileTrigger` and `TriggerType`.
+- **Encrypted Profile Export/Import & Team Sharing**:
+  - `ProfileSharingService` providing PBKDF2-HMAC-SHA256 (100,000 iterations) key derivation, stream encryption, and HMAC-SHA256 authenticated integrity verification with zero external dependencies.
+  - Automatic path generalization (`%USERPROFILE%` portability across differing developer machines).
+  - UI password prompt modals on export and import.
+- **Native Windows 11 Build-Resilient Dynamic COM Provider & Fallback Bridge**:
+  - `WindowsDynamicComProvider` supporting dynamic vtable offset dispatch across Windows 10 (Builds 17763–19045), Windows 11 21H2 (Build 22000), 22H2/23H2 (Builds 22621/22631), and Windows 11 24H2 (Build 26100+).
+  - Graceful cascade fallback to PyVDA, official COM, and Mock provider.
+- **Expanded Test Suite (109 Automated Tests)**: Added 15 new automated tests across `test_monitor_snap_feature.py`, `test_trigger_engine.py`, `test_profile_sharing.py`, and `test_dynamic_com_provider.py`.
+
 ## [2.0.0] - 2026-10-08
 
 ### Added
