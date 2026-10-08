@@ -7,14 +7,15 @@ from __future__ import annotations
 import os
 import re
 from typing import List, Optional
-from app.providers.base import IWindowProvider, WindowInfo
-from app.models.workspace import WindowPolicy
+from app.providers.base import IWindowProvider, WindowInfo, MonitorInfo
+from app.models.workspace import WindowPolicy, WindowSnap
 from app.logging.logger import get_logger
 
 try:
     import win32gui
     import win32process
     import win32con
+    import win32api
     WIN32_AVAILABLE = True
 except ImportError:
     WIN32_AVAILABLE = False
@@ -185,3 +186,79 @@ class WindowService(IWindowProvider):
         if non_minimized:
             return [non_minimized[0]]
         return [candidate_windows[0]]
+
+    def get_monitors(self) -> List[MonitorInfo]:
+        """Detects physical displays and their work areas (excluding taskbar)."""
+        if not WIN32_AVAILABLE:
+            return [MonitorInfo(index=0, x=0, y=0, width=1920, height=1080, is_primary=True)]
+        try:
+            monitors: List[MonitorInfo] = []
+            for i, h_mon in enumerate(win32api.EnumDisplayMonitors()):
+                info = win32api.GetMonitorInfo(h_mon[0])
+                rc_work = info.get("Work", (0, 0, 1920, 1080))
+                is_pri = bool(info.get("Flags", 0) & 1)
+                monitors.append(MonitorInfo(
+                    index=i,
+                    x=rc_work[0],
+                    y=rc_work[1],
+                    width=rc_work[2] - rc_work[0],
+                    height=rc_work[3] - rc_work[1],
+                    is_primary=is_pri
+                ))
+            return monitors or [MonitorInfo(index=0, x=0, y=0, width=1920, height=1080, is_primary=True)]
+        except Exception as ex:
+            self.logger.debug(f"EnumDisplayMonitors exception: {ex}")
+            return [MonitorInfo(index=0, x=0, y=0, width=1920, height=1080, is_primary=True)]
+
+    def snap_window(
+        self,
+        hwnd: int,
+        snap_mode: str,
+        monitor_index: int = 0,
+        custom_rect: Optional[List[int]] = None
+    ) -> bool:
+        """Snaps or tiles window to target monitor and layout geometry."""
+        if not WIN32_AVAILABLE or not win32gui.IsWindow(hwnd):
+            return False
+
+        if snap_mode == WindowSnap.DEFAULT.value:
+            return True
+        elif snap_mode == WindowSnap.MAXIMIZE.value:
+            win32gui.ShowWindow(hwnd, win32con.SW_MAXIMIZE)
+            return True
+        elif snap_mode == WindowSnap.MINIMIZE.value:
+            win32gui.ShowWindow(hwnd, win32con.SW_MINIMIZE)
+            return True
+
+        monitors = self.get_monitors()
+        mon = monitors[monitor_index] if 0 <= monitor_index < len(monitors) else monitors[0]
+
+        try:
+            # Restore if currently minimized or maximized before moving
+            win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
+
+            x, y, w, h = mon.x, mon.y, mon.width, mon.height
+            if snap_mode == WindowSnap.LEFT_HALF.value:
+                tx, ty, tw, th = x, y, w // 2, h
+            elif snap_mode == WindowSnap.RIGHT_HALF.value:
+                tx, ty, tw, th = x + (w // 2), y, w // 2, h
+            elif snap_mode == WindowSnap.TOP_HALF.value:
+                tx, ty, tw, th = x, y, w, h // 2
+            elif snap_mode == WindowSnap.BOTTOM_HALF.value:
+                tx, ty, tw, th = x, y + (h // 2), w, h // 2
+            elif snap_mode == WindowSnap.CENTER.value:
+                cw, ch = int(w * 0.75), int(h * 0.75)
+                tx, ty, tw, th = x + (w - cw) // 2, y + (h - ch) // 2, cw, ch
+            elif snap_mode == WindowSnap.CUSTOM.value and custom_rect and len(custom_rect) == 4:
+                tx, ty, tw, th = custom_rect
+            else:
+                return True
+
+            win32gui.SetWindowPos(
+                hwnd, 0, tx, ty, tw, th,
+                win32con.SWP_NOZORDER | win32con.SWP_NOACTIVATE
+            )
+            return True
+        except Exception as ex:
+            self.logger.warning(f"Failed to snap window HWND {hwnd}: {ex}")
+            return False
