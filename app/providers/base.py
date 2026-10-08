@@ -31,6 +31,17 @@ class WindowInfo:
 
 
 @dataclass
+class MonitorInfo:
+    """Represents a physical display monitor."""
+    index: int  # 0-indexed
+    x: int
+    y: int
+    width: int
+    height: int
+    is_primary: bool = False
+
+
+@dataclass
 class ProcessInfo:
     """Represents a running operating system process."""
     pid: int
@@ -109,6 +120,22 @@ class IWindowProvider(ABC):
     @abstractmethod
     def get_window_info(self, hwnd: int) -> Optional[WindowInfo]:
         """Fetches detailed window info by HWND."""
+        pass
+
+    @abstractmethod
+    def get_monitors(self) -> List[MonitorInfo]:
+        """Returns detected display monitors and their bounds."""
+        pass
+
+    @abstractmethod
+    def snap_window(
+        self,
+        hwnd: int,
+        snap_mode: str,
+        monitor_index: int = 0,
+        custom_rect: Optional[List[int]] = None
+    ) -> bool:
+        """Snaps/resizes window to target monitor and layout geometry."""
         pass
 
 

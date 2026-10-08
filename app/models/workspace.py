@@ -26,6 +26,19 @@ class LaunchMode(str, Enum):
     REUSE_ONLY = "reuse_only"
 
 
+class WindowSnap(str, Enum):
+    """Layout snapping / tiling position for a window."""
+    DEFAULT = "default"        # Keep original geometry
+    MAXIMIZE = "maximize"      # Full screen on target monitor
+    MINIMIZE = "minimize"      # Minimized
+    LEFT_HALF = "left_half"    # Left 50%
+    RIGHT_HALF = "right_half"  # Right 50%
+    TOP_HALF = "top_half"      # Top 50%
+    BOTTOM_HALF = "bottom_half"# Bottom 50%
+    CENTER = "center"          # Centered with 75% width/height
+    CUSTOM = "custom"          # Explicit coordinates [x, y, w, h]
+
+
 @dataclass
 class AppConfig:
     """Configuration for an individual managed application."""
@@ -42,6 +55,9 @@ class AppConfig:
     launch_delay_ms: int = 1000
     window_timeout_ms: int = 15000
     process_names: List[str] = field(default_factory=list)
+    monitor_index: int = 0
+    window_snap: str = WindowSnap.DEFAULT.value
+    custom_rect: Optional[List[int]] = None
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> AppConfig:
@@ -65,11 +81,18 @@ class AppConfig:
             clean["process_names"] = clean.pop("processNames")
         if "titlePattern" in clean and "title_pattern" not in clean:
             clean["title_pattern"] = clean.pop("titlePattern")
+        if "monitorIndex" in clean and "monitor_index" not in clean:
+            clean["monitor_index"] = clean.pop("monitorIndex")
+        if "windowSnap" in clean and "window_snap" not in clean:
+            clean["window_snap"] = clean.pop("windowSnap")
+        if "customRect" in clean and "custom_rect" not in clean:
+            clean["custom_rect"] = clean.pop("customRect")
 
         allowed_keys = {
             "id", "name", "executable", "arguments", "desktop", "enabled",
             "launch_mode", "move_existing_window", "window_policy",
-            "title_pattern", "launch_delay_ms", "window_timeout_ms", "process_names"
+            "title_pattern", "launch_delay_ms", "window_timeout_ms", "process_names",
+            "monitor_index", "window_snap", "custom_rect"
         }
         filtered = {k: v for k, v in clean.items() if k in allowed_keys}
         return cls(**filtered)
