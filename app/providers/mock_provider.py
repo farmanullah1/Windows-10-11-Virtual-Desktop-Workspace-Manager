@@ -78,6 +78,10 @@ class MockVirtualDesktopProvider(IVirtualDesktopProvider):
             return None
         return self.window_assignments.get(hwnd) == self.current_desktop
 
+    def get_window_desktop(self, hwnd: int) -> Optional[int]:
+        """Returns the 1-indexed desktop number the window is assigned to."""
+        return self.window_assignments.get(hwnd)
+
 
 class MockWindowProvider(IWindowProvider):
     """In-memory mock window discovery provider."""

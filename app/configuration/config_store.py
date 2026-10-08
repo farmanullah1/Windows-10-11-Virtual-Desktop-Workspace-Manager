@@ -12,6 +12,7 @@ import tempfile
 from pathlib import Path
 from typing import Optional, List, Tuple
 from app.models.workspace import WorkspaceConfig, WorkspaceProfile
+from app.models.history import OperationHistoryRecord
 from app.configuration.validator import ConfigValidator, ConfigValidationError
 from app.configuration.migration import ConfigMigration
 from app.logging.logger import get_logger
@@ -37,6 +38,7 @@ class ConfigStore:
         self.backup_file = self.config_dir / "workspace.backup.json"
         self.backup_dir = self.config_dir / "backups"
         self.backup_dir.mkdir(parents=True, exist_ok=True)
+        self.history_file = self.config_dir / "history.json"
         self.crash_marker_file = self.config_dir / "operation_in_progress.marker"
         self.logger = get_logger()
 
@@ -201,3 +203,52 @@ class ConfigStore:
         if errors:
             raise ConfigValidationError(f"Invalid workspace configuration: {'; '.join(errors)}")
         return config
+
+    # -------------------------------------------------------------
+    # Operation History Persistence (Section 29)
+    # -------------------------------------------------------------
+
+    def save_history_record(self, record: OperationHistoryRecord) -> None:
+        """Atomically prepends an operation history record, retaining at most 100 entries."""
+        try:
+            records = self.get_history_records(limit=100)
+            records.insert(0, record)
+            # Retain maximum 100 entries
+            records = records[:100]
+
+            data = [r.to_dict() for r in records]
+            json_text = json.dumps(data, indent=2, ensure_ascii=False)
+
+            tmp_fd, tmp_path = tempfile.mkstemp(
+                dir=str(self.config_dir),
+                prefix="history_",
+                suffix=".tmp"
+            )
+            with os.fdopen(tmp_fd, "w", encoding="utf-8") as f:
+                f.write(json_text)
+            shutil.move(tmp_path, str(self.history_file))
+        except Exception as ex:
+            self.logger.warning(f"Could not save operation history record: {ex}")
+
+    def get_history_records(self, limit: int = 50) -> List[OperationHistoryRecord]:
+        """Loads past operation history records up to the specified limit."""
+        if not self.history_file.exists():
+            return []
+        try:
+            raw_text = self.history_file.read_text(encoding="utf-8")
+            raw_data = json.loads(raw_text)
+            if not isinstance(raw_data, list):
+                return []
+            records = [OperationHistoryRecord.from_dict(item) for item in raw_data if isinstance(item, dict)]
+            return records[:limit]
+        except Exception as ex:
+            self.logger.warning(f"Could not load operation history records: {ex}")
+            return []
+
+    def clear_history(self) -> None:
+        """Clears all historical operation records."""
+        try:
+            if self.history_file.exists():
+                self.history_file.unlink(missing_ok=True)
+        except Exception as ex:
+            self.logger.warning(f"Could not clear operation history: {ex}")

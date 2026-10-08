@@ -5,10 +5,11 @@ synchronization, dry-run previews, and real-time operations.
 
 from __future__ import annotations
 import threading
-from typing import Optional, Callable, List, Tuple
+from typing import Optional, Callable, List, Tuple, Dict, Any
 from app.models.workspace import WorkspaceConfig, WorkspaceProfile, AppConfig, DesktopConfig
 from app.models.event import WorkspaceEvent
 from app.models.report import ExecutionReport
+from app.models.history import OperationHistoryRecord
 from app.configuration.config_store import ConfigStore
 from app.providers.base import (
     IVirtualDesktopProvider,
@@ -116,6 +117,8 @@ class WorkspaceManager:
 
         try:
             report = plan.execute(is_sync_mode=False)
+            hist_rec = OperationHistoryRecord.from_report(report, profile_name=profile.name)
+            self.config_store.save_history_record(hist_rec)
             return report
         finally:
             with self._op_lock:
@@ -148,11 +151,80 @@ class WorkspaceManager:
 
         try:
             report = plan.execute(is_sync_mode=True)
+            hist_rec = OperationHistoryRecord.from_report(report, profile_name=profile.name)
+            self.config_store.save_history_record(hist_rec)
             return report
         finally:
             with self._op_lock:
                 self._active_plan = None
                 self.config_store.clear_operation_marker()
+
+    def get_operation_history(self, limit: int = 50) -> List[OperationHistoryRecord]:
+        """Returns recorded operation history entries (Section 29)."""
+        return self.config_store.get_history_records(limit=limit)
+
+    def clear_operation_history(self) -> None:
+        """Clears stored operation history."""
+        self.config_store.clear_history()
+
+    def test_match_app(self, app: AppConfig) -> List[Dict[str, Any]]:
+        """
+        Diagnostic-only window matching tool conforming to Section 43.
+        Tests matching rules against running processes and visible windows without mutating state.
+        """
+        import os
+        import re
+        results = []
+        exe, _ = self.app_detector.detect_executable(app)
+        candidate_names = list(app.process_names)
+        if exe:
+            candidate_names.append(os.path.basename(exe))
+        if app.name:
+            candidate_names.append(f"{app.name}.exe")
+
+        running_procs = self.process_provider.get_running_processes_matching(candidate_names)
+        matching_pids = {p.pid for p in running_procs}
+
+        all_windows = self.window_provider.get_all_top_level_windows()
+
+        for w in all_windows:
+            pid_matched = w.pid in matching_pids
+            title_matched = False
+            if app.title_pattern:
+                if app.window_policy == "title_regex":
+                    try:
+                        title_matched = bool(re.search(app.title_pattern, w.title, re.IGNORECASE))
+                    except re.error:
+                        title_matched = False
+                else:
+                    title_matched = app.title_pattern.lower() in w.title.lower()
+            elif app.name.lower() in w.title.lower():
+                title_matched = True
+
+            if pid_matched or title_matched:
+                confidence = 95 if (pid_matched and title_matched) else (85 if pid_matched else 65)
+                dt_str = "Unknown"
+                if hasattr(self.desktop_provider, "get_window_desktop"):
+                    try:
+                        dt_id = self.desktop_provider.get_window_desktop(w.hwnd)
+                        if dt_id is not None:
+                            dt_str = f"Desktop {dt_id}"
+                    except Exception:
+                        pass
+
+                results.append({
+                    "matched": True,
+                    "app_name": app.name,
+                    "title": w.title,
+                    "pid": w.pid,
+                    "hwnd": f"0x{w.hwnd:08X}",
+                    "desktop": dt_str,
+                    "confidence": f"{confidence}%",
+                    "pid_matched": pid_matched,
+                    "title_matched": title_matched,
+                })
+
+        return results
 
     def stop_current_operation(self) -> None:
         """Emergency Stop: cancels in-flight workspace operation without killing processes."""
