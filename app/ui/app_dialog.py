@@ -22,11 +22,12 @@ class AppDialog(tk.Toplevel):
         app: Optional[AppConfig] = None,
         desktops: Optional[List[DesktopConfig]] = None,
         running_discoverer: Optional[RunningAppDiscoverer] = None,
-        on_save: Optional[Callable[[AppConfig], None]] = None
+        on_save: Optional[Callable[[AppConfig], None]] = None,
+        test_match_callback: Optional[Callable[[AppConfig], List[dict]]] = None
     ):
         super().__init__(parent)
         self.title("Configure Application" if app else "Add Application to Workspace")
-        self.geometry("540x660")
+        self.geometry("540x680")
         self.resizable(False, False)
         self.transient(parent)
         self.grab_set()
@@ -35,6 +36,7 @@ class AppDialog(tk.Toplevel):
         self.desktops = desktops or [DesktopConfig(number=1, name="Desktop 1")]
         self.running_discoverer = running_discoverer
         self.on_save = on_save
+        self.test_match_callback = test_match_callback
 
         self._build_ui()
         self._populate_fields()
@@ -150,6 +152,8 @@ class AppDialog(tk.Toplevel):
         # Buttons
         btn_frame = ttk.Frame(main_frame)
         btn_frame.pack(fill=tk.X, pady=(16, 0))
+        if self.test_match_callback:
+            ttk.Button(btn_frame, text="🔍 Test Match", command=self._on_test_match_clicked).pack(side=tk.LEFT)
         ttk.Button(btn_frame, text="Cancel", command=self.destroy).pack(side=tk.RIGHT, padx=4)
         ttk.Button(btn_frame, text="Save Application", style="Primary.TButton", command=self._save).pack(side=tk.RIGHT, padx=4)
 
@@ -309,3 +313,74 @@ class AppDialog(tk.Toplevel):
             self.on_save(self.app)
 
         self.destroy()
+
+    def _on_test_match_clicked(self) -> None:
+        """Section 43: Diagnostic-only test matching tool."""
+        if not self.test_match_callback:
+            return
+
+        # Build temporary AppConfig with current form values
+        temp_app = AppConfig(
+            id=self.app.id,
+            name=self.name_var.get().strip() or "Application",
+            executable=self.exe_var.get().strip(),
+            arguments=self.args_var.get().strip(),
+            desktop=self.desktops[self.desktop_combo.current()].number if self.desktop_combo.current() >= 0 else 1,
+            enabled=self.enabled_var.get(),
+            launch_mode=self.launch_mode_var.get(),
+            window_policy=self._policy_map.get(self.policy_combo.get(), WindowPolicy.MAIN_ONLY.value),
+            title_pattern=self.title_pattern_var.get().strip(),
+            process_names=list(self.app.process_names)
+        )
+        if not temp_app.process_names and temp_app.executable:
+            temp_app.process_names = [os.path.basename(temp_app.executable)]
+
+        results = self.test_match_callback(temp_app)
+
+        # Show modal dialog with test match results
+        top = tk.Toplevel(self)
+        top.title(f"Test Match: {temp_app.name}")
+        top.geometry("600x420")
+        top.transient(self)
+        top.grab_set()
+
+        frame = ttk.Frame(top, padding=14)
+        frame.pack(fill=tk.BOTH, expand=True)
+
+        ttk.Label(frame, text=f"Window Match Evaluation — {temp_app.name}", font=("Segoe UI", 11, "bold")).pack(anchor=tk.W, pady=(0, 4))
+        rule_desc = f"Rule: Exe='{os.path.basename(temp_app.executable)}' | Policy='{temp_app.window_policy}'"
+        if temp_app.title_pattern:
+            rule_desc += f" | Title='{temp_app.title_pattern}'"
+        ttk.Label(frame, text=rule_desc, style="Muted.TLabel").pack(anchor=tk.W, pady=(0, 10))
+
+        if not results:
+            empty_box = ttk.LabelFrame(frame, text="Results", padding=16)
+            empty_box.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
+            ttk.Label(empty_box, text="○ No active windows or running processes match this rule currently.", font=("Segoe UI", 10)).pack(pady=16)
+            ttk.Label(empty_box, text="Start the application or check executable and title regex pattern.", style="Muted.TLabel").pack()
+        else:
+            res_box = ttk.LabelFrame(frame, text=f"Matches ({len(results)} found)", padding=8)
+            res_box.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
+
+            tree = ttk.Treeview(res_box, columns=("conf", "pid", "hwnd", "dt", "title"), show="headings", height=8)
+            tree.heading("conf", text="Confidence")
+            tree.heading("pid", text="PID")
+            tree.heading("hwnd", text="HWND")
+            tree.heading("dt", text="Current Desktop")
+            tree.heading("title", text="Window Title")
+            tree.column("conf", width=80)
+            tree.column("pid", width=60)
+            tree.column("hwnd", width=80)
+            tree.column("dt", width=100)
+            tree.column("title", width=240)
+            tree.pack(fill=tk.BOTH, expand=True)
+
+            for r in results:
+                tree.insert("", tk.END, values=(r["confidence"], r["pid"], r["hwnd"], r["desktop"], r["title"]))
+
+        notice = ttk.Label(frame, text="Note: Test Match is strictly read-only and diagnostic; no windows were moved.", style="Muted.TLabel")
+        notice.pack(anchor=tk.W, pady=(0, 8))
+
+        btn_bar = ttk.Frame(frame)
+        btn_bar.pack(fill=tk.X)
+        ttk.Button(btn_bar, text="Close", command=top.destroy).pack(side=tk.RIGHT)
