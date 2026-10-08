@@ -1,3 +1,3046 @@
+# VIRTUAL DESKTOP WORKSPACE MANAGER — PRODUCTION-READY GOOGLE ANTIGRAVITY MASTER PROMPT
+## Fully Updated Product, Architecture, Safety, UX, Setup, Testing, and Delivery Specification
+
+> **Revision:** 2.0  
+> **Target:** Windows 10/11, primarily 64-bit  
+> **Intended use:** Daily-use local desktop productivity utility  
+> **Implementation environment:** Google Antigravity  
+> **Execution policy:** Build and validate safely; do not run the generated application unless explicitly authorized  
+> **Source baseline:** This revision incorporates the original specification and adds the higher-priority product, UX, accessibility, architecture, observability, recovery, setup, and acceptance requirements below.
+
+---
+
+# 0. MASTER INSTRUCTION — READ THIS FIRST
+
+Act as a **senior Windows desktop software engineer, Windows API/COM engineer, software architect, security engineer, QA engineer, reliability engineer, technical writer, and senior UX/product designer**.
+
+Build a **production-oriented Windows 10/11 Virtual Desktop Workspace Manager** intended for real daily use.
+
+This document is a **complete product specification**, not a request for a prototype or a visual mockup.
+
+The application must be:
+
+- reliable;
+- safe;
+- predictable;
+- maintainable;
+- testable;
+- accessible;
+- visually clear;
+- responsive;
+- configuration-driven;
+- offline-first;
+- conservative with Windows state;
+- explicit about unsupported capabilities;
+- resistant to race conditions and stale Windows handles;
+- idempotent;
+- recoverable after partial failure;
+- usable by a non-expert without requiring source-code edits.
+
+## 0.1 Source-of-truth and precedence rule
+
+The detailed requirements contained later in this document remain mandatory.
+
+This revision adds **higher-priority clarification requirements** where the original specification was repetitive, ambiguous, or left product/UX behavior underspecified.
+
+When two requirements appear to conflict, use this precedence order:
+
+1. **Safety and explicit user authorization**
+2. **Do-not-run-during-development rule**
+3. **Do-not-destroy/modify unrelated Windows state**
+4. **Correctness and verified state**
+5. **Persistent configuration integrity**
+6. **User control and accessibility**
+7. **Reliability and recovery**
+8. **Maintainability/testability**
+9. **Performance**
+10. **Visual polish**
+
+Never sacrifice a higher-priority rule to satisfy a lower-priority one.
+
+## 0.2 Absolute development execution boundary
+
+Google Antigravity must **create the product, not operate the user's real Windows environment**.
+
+During development:
+
+- create source code;
+- create documentation;
+- create tests;
+- create mock/fake providers;
+- perform static analysis;
+- perform syntax/type/lint validation;
+- inspect generated files;
+- run only isolated tests that cannot manipulate the real Windows workspace.
+
+Do **not**:
+
+- launch the generated GUI;
+- execute the generated workspace;
+- execute `setup.py`;
+- create the real Desktop shortcuts;
+- launch configured applications;
+- create/delete/switch/move real Virtual Desktops;
+- move real application windows;
+- create startup persistence;
+- create scheduled tasks;
+- install services;
+- modify unrelated Windows settings;
+- modify user files or development data.
+
+The words **build**, **finish**, **test**, **validate**, or **complete** are not authorization to run the product.
+
+Only an explicit future instruction such as **"Run the application"**, **"Run setup"**, or **"Run the workspace"** authorizes the corresponding real-world action.
+
+---
+
+# 1. OBJECTIVE
+
+Create a Windows desktop utility that lets users define persistent **workspace profiles** consisting of:
+
+- named workspace desktops;
+- mappings to real Windows Virtual Desktops;
+- one or more applications per workspace desktop;
+- application launch policies;
+- process/window matching rules;
+- execution and verification policies;
+- saved configuration;
+- diagnostics and operation history.
+
+The product must let the user:
+
+1. inspect the current Windows Virtual Desktop environment;
+2. configure workspace layouts;
+3. add applications without source-code changes;
+4. assign multiple applications to one desktop;
+5. reassign applications between desktops;
+6. save those changes permanently;
+7. preview what would happen;
+8. explicitly launch a workspace;
+9. synchronize desired state with actual state;
+10. monitor progress;
+11. cancel future work safely;
+12. diagnose failures;
+13. recover configuration safely;
+14. import/export profiles;
+15. maintain multiple workspace profiles;
+16. use the manager without Administrator privileges whenever possible.
+
+The product must **not** become a general Windows cleaner, debloater, process killer, registry editor, remote-control tool, or system optimizer.
+
+---
+
+# 2. TARGET AUDIENCE
+
+Primary audience:
+
+- Windows 10/11 developers;
+- power users;
+- technical professionals;
+- users who work with multiple applications across Virtual Desktops;
+- users who want repeatable workspaces without manually arranging applications every time.
+
+The interface must still be understandable to a technically competent Windows user who does not know Windows COM APIs, HWNDs, PIDs, GUIDs, or internal Virtual Desktop implementation details.
+
+Technical complexity belongs in:
+
+- Advanced Settings;
+- Diagnostics;
+- Logs;
+- API compatibility documentation.
+
+Do not expose implementation complexity unnecessarily in the main workflow.
+
+---
+
+# 3. PRODUCT TONE AND DESIGN LANGUAGE
+
+The product should feel like a **serious Windows productivity utility**, not an AI dashboard.
+
+Use:
+
+- calm visual hierarchy;
+- compact but breathable layouts;
+- clear labels;
+- familiar Windows interaction patterns;
+- consistent icons;
+- predictable buttons;
+- meaningful status text;
+- restrained motion;
+- strong focus states;
+- accessible contrast;
+- obvious primary actions.
+
+Avoid:
+
+- excessive gradients;
+- neon/glowing effects;
+- oversized cards;
+- excessive rounded containers;
+- decorative animations;
+- fake metrics;
+- unnecessary charts;
+- dense technical jargon;
+- ambiguous icon-only controls;
+- giant empty dashboard areas.
+
+The UI must prioritize **clarity over visual novelty**.
+
+---
+
+# 4. SCOPE
+
+## 4.1 In scope
+
+- Virtual Desktop capability detection;
+- Virtual Desktop discovery/mapping where supported;
+- workspace configuration;
+- profiles;
+- application discovery;
+- process/window detection;
+- safe application launch;
+- window movement;
+- desired/actual state comparison;
+- dry run;
+- execution planning;
+- verification;
+- cancellation;
+- diagnostics;
+- structured logs;
+- operation history;
+- configuration backup/restore;
+- import/export;
+- setup/bootstrap;
+- Desktop shortcuts;
+- optional startup integration;
+- accessibility;
+- light/dark/system appearance;
+- packaging documentation;
+- unit/mock/integration tests.
+
+## 4.2 Explicitly out of scope for Version 1
+
+Do not add:
+
+- system cleaning;
+- debloating;
+- RAM cleaners;
+- registry cleaners;
+- process killing;
+- application uninstallers;
+- browser cleanup;
+- antivirus controls;
+- firewall modification;
+- remote management;
+- cloud synchronization;
+- telemetry;
+- cryptocurrency;
+- automatic online updater;
+- arbitrary script execution;
+- remote commands;
+- generic task automation;
+- hidden persistence mechanisms.
+
+---
+
+# 5. UX PRINCIPLES — NEW HIGH-PRIORITY REQUIREMENTS
+
+The application must be designed around the following principles.
+
+## 5.1 Progressive disclosure
+
+Show simple information first.
+
+Example:
+
+```text
+Development
+4 applications
+3 running
+1 missing
+Ready
+```
+
+Allow the user to open deeper details when needed:
+
+```text
+View Details
+→
+Executable path
+PID
+HWND
+Desktop GUID
+matching confidence
+provider information
+```
+
+Do not expose all technical metadata in every card.
+
+## 5.2 One clear primary action per context
+
+Examples:
+
+Dashboard:
+
+```text
+Launch Workspace
+```
+
+Workspace editor:
+
+```text
+Save Changes
+```
+
+Execution:
+
+```text
+Run
+```
+
+Diagnostics:
+
+```text
+Run Health Check
+```
+
+Do not present ten equally prominent buttons.
+
+## 5.3 Safe destructive/disruptive actions
+
+Every action capable of changing Windows state must communicate:
+
+- what will happen;
+- what will not happen;
+- whether it is reversible;
+- whether confirmation is required;
+- what happens if it fails.
+
+## 5.4 Never use color alone
+
+A warning must not be represented only by yellow.
+
+Use:
+
+```text
+⚠ Warning
+```
+
+A success must include text:
+
+```text
+✓ Verified
+```
+
+An error must include text:
+
+```text
+✕ Error
+```
+
+Provide accessible labels/tooltips where icons are used.
+
+---
+
+# 6. INFORMATION ARCHITECTURE
+
+Use a clear primary navigation model.
+
+Recommended:
+
+```text
+Dashboard
+Workspaces
+Applications
+Virtual Desktops
+Execution
+History
+Logs
+Diagnostics
+Settings
+About
+```
+
+Do not make every page equally prominent.
+
+## 6.1 Global header
+
+The header should show:
+
+- application name;
+- active profile;
+- current Windows desktop;
+- overall health/status;
+- refresh action;
+- settings access.
+
+## 6.2 Global execution area
+
+When an operation is running, the UI should expose a persistent operation status area containing:
+
+```text
+Operation: Sync Workspace
+Profile: Development
+Status: Running
+Progress: Working...
+[Stop]
+```
+
+The user must never have to guess whether the application is still working.
+
+---
+
+# 7. DASHBOARD — IMPROVED
+
+The dashboard should answer four questions immediately:
+
+1. What workspace/profile am I using?
+2. What is the current Windows desktop?
+3. Is the workspace healthy?
+4. What can I do next?
+
+Recommended structure:
+
+```text
+┌──────────────────────────────────────────────────────────┐
+│ Virtual Desktop Workspace Manager                        │
+│ Profile: Development                 Current: Desktop 2  │
+├──────────────────────────────────────────────────────────┤
+│ Workspace Status                                         │
+│ ✓ Ready                                                  │
+│                                                          │
+│ 4 Desktops     7 Apps     5 Running     1 Warning       │
+├──────────────────────────────────────────────────────────┤
+│ Quick Actions                                            │
+│ [Launch Workspace] [Sync] [Dry Run] [Refresh]            │
+├──────────────────────────────────────────────────────────┤
+│ Workspace Overview                                       │
+│                                                          │
+│ Browser        ✓ 1 app                                   │
+│ Development    ✓ 3 apps                                  │
+│ Database       ⚠ 1 app missing                           │
+│ API            ✓ 2 apps                                  │
+├──────────────────────────────────────────────────────────┤
+│ Recent Activity                                          │
+│ Last sync • 2 minutes ago • Completed with 1 warning     │
+└──────────────────────────────────────────────────────────┘
+```
+
+The dashboard must remain useful even when:
+
+- no workspace exists;
+- no desktops are detected;
+- no applications are configured;
+- the provider is unavailable;
+- configuration is invalid.
+
+---
+
+# 8. EMPTY STATES
+
+Every major screen needs a deliberate empty state.
+
+## 8.1 No workspace
+
+```text
+No workspace configured yet.
+
+Create a workspace to organize applications across
+Windows Virtual Desktops.
+
+[Create Workspace]
+[Import Workspace]
+```
+
+## 8.2 No applications
+
+```text
+No applications assigned.
+
+Add an application by browsing for an executable,
+selecting a running application, or using discovery.
+
+[Add Application]
+```
+
+## 8.3 No desktops
+
+```text
+No Virtual Desktop mapping is available.
+
+[Refresh]
+[Run Diagnostics]
+[Configure Mapping]
+```
+
+## 8.4 No history
+
+```text
+No workspace operations have been recorded yet.
+```
+
+Do not display fake sample activity in production mode.
+
+---
+
+# 9. LOADING STATES
+
+Never freeze the UI without explanation.
+
+Use meaningful loading states:
+
+```text
+Detecting Virtual Desktops…
+Scanning running applications…
+Resolving executable…
+Building execution plan…
+Verifying window placement…
+```
+
+For operations with unknown duration:
+
+```text
+Working…
+```
+
+Do not invent percentages.
+
+If real progress can be measured, show it.
+
+---
+
+# 10. ERROR UX
+
+Errors must answer:
+
+1. What happened?
+2. Why did it happen?
+3. What did the manager avoid doing?
+4. What can the user do next?
+
+Bad:
+
+```text
+COM error 0x80004005
+```
+
+Better:
+
+```text
+Could not move the selected window.
+
+The window was detected, but Windows did not confirm
+the requested Virtual Desktop assignment.
+
+No process was terminated and no files were modified.
+
+[Retry]
+[View Details]
+[Run Diagnostics]
+```
+
+Technical error information remains available in Logs/Details.
+
+---
+
+# 11. SUCCESS UX
+
+Do not merely show:
+
+```text
+Success
+```
+
+Show verified outcome:
+
+```text
+Workspace synchronized
+
+✓ 6 applications verified
+✓ 5 windows assigned
+⚠ 1 application unavailable
+
+[View Details]
+```
+
+A requested-but-unverified operation must say:
+
+```text
+Completed — verification unavailable
+```
+
+not:
+
+```text
+Verified
+```
+
+---
+
+# 12. CONFIRMATION UX
+
+Use confirmations selectively.
+
+Do not ask for confirmation for harmless actions such as:
+
+- opening Settings;
+- refreshing detection;
+- viewing logs;
+- switching tabs;
+- saving ordinary configuration changes.
+
+Confirmation is appropriate for:
+
+- executing a workspace;
+- importing a workspace containing launch definitions;
+- restoring configuration;
+- changing startup automation;
+- moving a running window immediately because of a configuration change;
+- actions with significant Windows-state impact.
+
+Confirmation dialogs must state the scope.
+
+Example:
+
+```text
+Run Development Workspace?
+
+This may:
+• create missing Virtual Desktops if supported;
+• launch configured applications;
+• move matched application windows.
+
+This will not:
+• kill applications;
+• uninstall software;
+• delete files;
+• delete user-created desktops.
+
+[Cancel] [Review Plan]
+```
+
+---
+
+# 13. EXECUTION PLAN UX — IMPROVED
+
+Before real execution, show a reviewable plan.
+
+Group actions:
+
+```text
+DESKTOPS
++ Create Desktop
+
+APPLICATIONS
+✓ Reuse Brave
+→ Move Brave → Browser
+→ Launch Postman
+→ Move Postman → API
+
+WARNINGS
+⚠ SSMS executable could not be resolved
+```
+
+Each planned action should expose details on demand.
+
+Provide:
+
+```text
+[Back]
+[Cancel]
+[Run]
+```
+
+Do not make the Run button available while blocking validation errors exist.
+
+---
+
+# 14. LIVE EXECUTION UX
+
+While running, show a chronological task list:
+
+```text
+✓ Configuration validated
+✓ Virtual Desktop mapping refreshed
+✓ Brave detected
+✓ Brave window verified
+→ Launching Postman…
+○ Waiting for Postman window
+○ Moving Postman
+○ Verifying
+```
+
+Allow the user to expand an item for technical details.
+
+Provide:
+
+- Stop;
+- Pause if implemented;
+- View Logs;
+- operation ID.
+
+Do not allow conflicting workspace operations during execution.
+
+---
+
+# 15. WORKSPACE EDITOR — IMPROVED
+
+The workspace editor should make the relationship between desktops and applications obvious.
+
+Preferred model:
+
+```text
+WORKSPACE: Development
+
+┌───────────────────────────────────────────┐
+│ Browser                                   │
+│ Windows Desktop: 1                        │
+│                                           │
+│  • Brave                                  │
+│                                           │
+│ [+ Add Application] [Edit]                │
+└───────────────────────────────────────────┘
+
+┌───────────────────────────────────────────┐
+│ Development                               │
+│ Windows Desktop: 2                        │
+│                                           │
+│  • Google Antigravity                     │
+│  • VS Code                                │
+│  • Git Bash                               │
+│                                           │
+│ [+ Add Application] [Edit]                │
+└───────────────────────────────────────────┘
+```
+
+Support:
+
+- add desktop;
+- rename workspace label;
+- map desktop;
+- reorder display order;
+- add multiple applications;
+- drag-and-drop assignment;
+- edit application;
+- disable application;
+- remove configuration;
+- duplicate a workspace profile;
+- import/export.
+
+---
+
+# 16. APPLICATION DETAILS DRAWER
+
+Use a side panel/drawer or dedicated editor for detailed application configuration.
+
+Show simple information first:
+
+```text
+Brave Browser
+✓ Detected
+Desktop: Browser
+Launch mode: Reuse existing
+Windows: 2
+```
+
+Advanced sections:
+
+```text
+Executable
+Arguments
+Working Directory
+Discovery
+Matching
+Window Policy
+Timeouts
+Retries
+Environment
+Diagnostics
+```
+
+Use collapsible sections to avoid overwhelming the user.
+
+---
+
+# 17. APPLICATION DISCOVERY UX
+
+The Add Application workflow should guide the user.
+
+Recommended dialog:
+
+```text
+Add Application
+
+How would you like to add it?
+
+[Browse for EXE]
+[Choose Running Application]
+[Discover Installed Applications]
+[Use Template]
+```
+
+After discovery:
+
+```text
+Brave Browser
+
+Detected:
+✓ Executable
+✓ Installation
+✓ Running process
+✓ 2 windows
+
+Choose installation:
+○ C:\...
+○ C:\...
+
+[Add Application]
+```
+
+If ambiguous:
+
+```text
+Multiple installations found.
+
+Please choose the installation to manage.
+```
+
+Never silently select a questionable executable.
+
+---
+
+# 18. DESKTOP MAPPING UX
+
+Provide a dedicated mapping screen.
+
+```text
+Workspace Desktop       Windows Desktop
+------------------------------------------------
+Browser                 Desktop 1 ✓
+Development             Desktop 2 ✓
+Database                Desktop 4 ✓
+API                     Desktop 5 ⚠
+```
+
+For each mapping show:
+
+- identity confidence;
+- current existence;
+- current desktop indicator;
+- stale/unknown state;
+- last verified time.
+
+When identity cannot be safely determined:
+
+```text
+Mapping requires review.
+
+Windows reported a different desktop identity.
+The manager will not guess.
+
+[Review]
+```
+
+---
+
+# 19. ACCESSIBILITY — EXPANDED
+
+The product must support:
+
+- keyboard-only operation;
+- logical tab order;
+- visible keyboard focus;
+- accessible names for controls;
+- accessible descriptions for complex controls;
+- screen-reader-friendly status text where supported by the UI framework;
+- scalable text/layout where practical;
+- sufficient contrast;
+- non-color status communication;
+- tooltips for unfamiliar icons;
+- keyboard shortcuts for frequent operations;
+- dialogs that do not trap focus incorrectly.
+
+Recommended keyboard shortcuts:
+
+```text
+Ctrl+S       Save
+Ctrl+R       Refresh
+Ctrl+F       Search
+Ctrl+L       View Logs
+Ctrl+,       Settings
+F5            Refresh
+Esc           Close/cancel current dialog
+```
+
+Only implement shortcuts that do not conflict with native Windows behavior.
+
+---
+
+# 20. RESPONSIVE DESKTOP LAYOUT
+
+Although this is a Windows desktop application, support:
+
+- window resizing;
+- smaller laptop resolutions;
+- 100%/125%/150% Windows scaling;
+- long application names;
+- long executable paths;
+- large numbers of applications;
+- large numbers of workspace desktops.
+
+Do not rely on fixed pixel widths for critical controls.
+
+When space becomes limited:
+
+- collapse secondary information;
+- use scrollable regions;
+- preserve primary actions;
+- avoid clipped text;
+- avoid overlapping controls.
+
+---
+
+# 21. SEARCH, FILTERING, AND SORTING
+
+Where lists become non-trivial, provide:
+
+- search;
+- filtering;
+- sorting;
+- clear filter;
+- result count.
+
+Applications should be searchable by:
+
+- name;
+- executable;
+- desktop;
+- status.
+
+Logs should be searchable by:
+
+- operation ID;
+- level;
+- component;
+- time;
+- text.
+
+History should be filterable by:
+
+- profile;
+- operation;
+- result;
+- date range.
+
+---
+
+# 22. NOTIFICATION SYSTEM
+
+Use a consistent notification/toast system for non-blocking events.
+
+Examples:
+
+```text
+Saved
+Workspace configuration saved.
+
+Warning
+Postman was not detected.
+
+Completed
+Workspace synchronized with 1 warning.
+```
+
+Do not use notifications for critical errors that require user action.
+
+Provide a persistent error/warning area for unresolved issues.
+
+---
+
+# 23. UNSAVED-CHANGE PROTECTION
+
+If the user has unsaved changes and attempts to:
+
+- close the window;
+- switch workspace;
+- switch profile;
+- reload from disk;
+- import another configuration;
+- restore a backup;
+
+show:
+
+```text
+You have unsaved changes.
+
+[Save Changes]
+[Discard Changes]
+[Cancel]
+```
+
+Never silently discard user configuration edits.
+
+---
+
+# 24. CONFIGURATION DIFF / REVIEW
+
+For important configuration operations, provide a review screen.
+
+Example:
+
+```text
+Configuration Changes
+
++ Add Postman
+~ Move Brave: Desktop 1 → Desktop 4
+~ Launch mode: Reuse → Ask
+- Remove Old Test App
+```
+
+This is especially useful for:
+
+- imports;
+- restores;
+- migrations;
+- bulk edits.
+
+---
+
+# 25. PROFILE UX
+
+Profile switching must be visibly separated from execution.
+
+Example:
+
+```text
+Active Profile
+Development
+
+[Switch Profile]
+```
+
+After switching:
+
+```text
+Profile changed
+
+Development → Work
+
+No applications were launched.
+No windows were moved.
+
+[View Work Profile]
+[Launch Work Workspace]
+```
+
+Never make profile switching implicitly execute a workspace.
+
+---
+
+# 26. HEALTH INDICATOR
+
+Provide a simple overall health state:
+
+```text
+✓ Healthy
+⚠ Needs Attention
+✕ Blocked
+```
+
+Calculate it from real conditions such as:
+
+- provider availability;
+- configuration validity;
+- unresolved mappings;
+- missing required applications;
+- writable configuration;
+- logging health.
+
+Do not use arbitrary scores unless they provide real value.
+
+---
+
+# 27. DIAGNOSTICS UX
+
+The Diagnostics page should be organized into categories:
+
+```text
+System
+Virtual Desktops
+Provider
+Configuration
+Applications
+Windows
+Permissions
+Storage
+Dependencies
+Recent Errors
+```
+
+Each category should show:
+
+```text
+✓ Passed
+⚠ Warning
+✕ Failed
+— Not Tested
+```
+
+Provide:
+
+```text
+[Run Health Check]
+[Generate Diagnostic Report]
+[Copy Summary]
+[Open Logs]
+```
+
+Health Check remains diagnostic-only.
+
+---
+
+# 28. LOG VIEWER UX
+
+Provide:
+
+- live tailing while an operation runs;
+- search;
+- level filters;
+- operation filter;
+- date/time display;
+- copy selected;
+- export;
+- open log directory;
+- clear visible filter;
+- safe log retention.
+
+Do not render massive logs in a way that freezes the GUI.
+
+Use virtualization/pagination where appropriate.
+
+---
+
+# 29. OPERATION HISTORY UX
+
+History should provide a compact table:
+
+```text
+Time       Profile       Operation      Result       Duration
+10:42      Development   Sync           Warning      8.4s
+09:15      Work          Launch         Success      6.1s
+Yesterday  Development   Dry Run        Complete     0.8s
+```
+
+Selecting a row opens details.
+
+Allow:
+
+- view report;
+- open logs;
+- copy operation ID;
+- rerun as Dry Run;
+- inspect warnings.
+
+Do not provide a one-click destructive "rerun" without applying the normal execution safety rules.
+
+---
+
+# 30. SETTINGS INFORMATION ARCHITECTURE
+
+Organize Settings into:
+
+```text
+General
+Appearance
+Execution
+Safety
+Startup
+Tray
+Logging
+Diagnostics
+Advanced
+About
+```
+
+Do not place unrelated settings in one giant form.
+
+Every non-obvious setting should have a short explanation.
+
+Advanced settings should clearly identify when changing them may affect execution behavior.
+
+---
+
+# 31. SETTINGS GUARDRAILS
+
+For settings such as:
+
+- timeouts;
+- retries;
+- polling;
+- automation;
+- startup;
+- confirmation;
+
+validate reasonable bounds.
+
+Do not allow:
+
+```text
+negative timeout
+negative retry count
+zero/invalid polling interval
+unbounded retry
+```
+
+unless the semantics explicitly require it.
+
+Prefer bounded values with documented maximums.
+
+---
+
+# 32. FIRST-RUN EXPERIENCE — IMPROVED
+
+The first-run wizard must distinguish **configuration** from **execution**.
+
+Recommended flow:
+
+```text
+1. Welcome
+2. System compatibility
+3. Virtual Desktop capabilities
+4. Detect current desktops
+5. Create/select workspace profile
+6. Map workspace desktops
+7. Discover applications
+8. Assign applications
+9. Configure launch behavior
+10. Review configuration
+11. Save
+12. Finish
+```
+
+At the end:
+
+```text
+Your workspace is configured.
+
+Nothing has been launched.
+Nothing has been moved.
+No Virtual Desktop changes were performed.
+
+[Open Workspace]
+[Close]
+```
+
+Do not put a "Launch now" action immediately beside Finish unless it is clearly separated as an explicit next action.
+
+---
+
+# 33. GUIDED SETUP / CONFIGURATION CHECKLIST
+
+Provide a persistent checklist where useful:
+
+```text
+Workspace Setup
+
+✓ Profile created
+✓ Desktop mappings configured
+✓ Applications added
+⚠ Postman path needs review
+✓ Save completed
+```
+
+This should disappear or become optional once configuration is healthy.
+
+---
+
+# 34. SAFE QUICK ACTIONS
+
+The dashboard may provide:
+
+- Refresh;
+- Dry Run;
+- Launch Workspace;
+- Sync;
+- Open Logs;
+- Health Check.
+
+Do not put risky system-management actions into the quick-action area.
+
+---
+
+# 35. SYSTEM TRAY UX
+
+If a tray implementation is included:
+
+- tray icon must communicate state;
+- tooltip should show profile and status;
+- context menu must remain concise;
+- Exit must actually stop the manager;
+- tray actions must use the same authorization model as the GUI.
+
+Recommended:
+
+```text
+Open Manager
+Launch Workspace
+Sync Workspace
+Pause Automation
+Health Check
+View Logs
+Settings
+Exit
+```
+
+When the manager is only monitoring/idle:
+
+```text
+Virtual Desktop Workspace Manager
+Development • Ready
+```
+
+When running:
+
+```text
+Development • Running
+```
+
+When warning:
+
+```text
+Development • Warning
+```
+
+---
+
+# 36. NOTIFICATION AND TRAY SAFETY
+
+Do not allow a background tray process to become an invisible automation engine.
+
+If automation is disabled:
+
+```text
+No background workspace execution.
+```
+
+If startup automation is enabled, clearly show it in Settings and Diagnostics.
+
+---
+
+# 37. STATE MODEL — EXPANDED
+
+Define explicit application states:
+
+```text
+UNINITIALIZED
+SETUP_REQUIRED
+READY
+CONFIGURATION_DIRTY
+VALIDATION_FAILED
+DRY_RUN
+PLANNING
+AWAITING_CONFIRMATION
+RUNNING
+PAUSED
+CANCELLING
+CANCELLED
+COMPLETED
+COMPLETED_WITH_WARNINGS
+FAILED
+RECOVERY_REQUIRED
+UNAVAILABLE
+```
+
+State transitions must be explicit and testable.
+
+Do not allow UI state to imply execution state incorrectly.
+
+---
+
+# 38. OPERATION STATE MACHINE
+
+Use:
+
+```text
+Idle
+ ↓
+Validate
+ ↓
+Discover
+ ↓
+Plan
+ ↓
+Await Approval
+ ↓
+Execute
+ ↓
+Verify
+ ↓
+Report
+```
+
+Failure branches:
+
+```text
+Validation Failed
+Discovery Warning
+Capability Blocked
+Cancelled
+Partial Failure
+Unexpected Failure
+Recovery Required
+```
+
+The UI must reflect these states accurately.
+
+---
+
+# 39. OPERATION SAFETY CONTRACT
+
+Every real workspace operation must follow:
+
+```text
+1. Load configuration
+2. Validate configuration
+3. Detect capabilities
+4. Discover current state
+5. Resolve mappings
+6. Build plan
+7. Present/record plan
+8. Obtain required authorization
+9. Revalidate state
+10. Execute one bounded action at a time
+11. Revalidate before disruptive actions
+12. Verify outcome
+13. Continue or safely skip
+14. Produce final report
+15. Persist operation history
+```
+
+Never jump directly from a UI button to an arbitrary Windows API call.
+
+---
+
+# 40. ACTION CLASSIFICATION
+
+Classify actions as:
+
+### Read-only
+
+- detect desktops;
+- inspect windows;
+- inspect processes;
+- validate configuration;
+- diagnostics;
+- dry-run planning.
+
+### Configuration-only
+
+- add application;
+- rename workspace label;
+- change mapping;
+- change settings;
+- import configuration.
+
+### Windows-state-changing
+
+- create desktop;
+- switch desktop;
+- launch application;
+- move window;
+- startup registration.
+
+This classification should be used in:
+
+- confirmation UX;
+- logs;
+- permissions;
+- tests;
+- audit history.
+
+---
+
+# 41. AUTHORIZATION BOUNDARY
+
+The application must distinguish:
+
+```text
+User requested configuration change
+```
+
+from:
+
+```text
+User authorized Windows-state execution
+```
+
+Examples:
+
+- Saving `Brave → Desktop 4` does not move Brave immediately.
+- Opening Configure does not launch applications.
+- Switching profile does not launch applications.
+- Importing a profile does not execute it.
+- Dry Run does not execute.
+- Health Check does not execute.
+- Run Workspace explicitly authorizes execution.
+- A direct "Move Now" action explicitly authorizes that move only.
+
+---
+
+# 42. MANUAL ACTION VS AUTOMATION
+
+Every feature that can change Windows state should be understandable as either:
+
+```text
+Manual action
+```
+
+or:
+
+```text
+Workspace automation
+```
+
+Do not allow hidden automation to piggyback on harmless UI actions.
+
+---
+
+# 43. WINDOW-MATCHING TEST UI
+
+When editing a matching rule, provide a **Test Match** function.
+
+It must be diagnostic-only.
+
+Example:
+
+```text
+Test Match
+
+Rule:
+Executable path = brave.exe
+Title contains = GitHub
+
+Matches:
+✓ Brave
+PID 1234
+HWND 0x000...
+Desktop: 2
+Confidence: 90%
+
+[Close]
+```
+
+Test Match must not move or launch anything.
+
+---
+
+# 44. APPLICATION DISCOVERY CACHE
+
+If discovery caching is used:
+
+- cache only application metadata;
+- use bounded retention;
+- invalidate when paths change;
+- never treat cache as authoritative;
+- never overwrite a user-selected executable because cached discovery differs.
+
+---
+
+# 45. STALE STATE UX
+
+If cached or persisted state is stale:
+
+```text
+Workspace state may be outdated.
+
+Windows reports that the mapped desktop no longer exists.
+
+[Refresh]
+[Review Mapping]
+```
+
+Do not silently repair ambiguous identity.
+
+---
+
+# 46. RECOVERY CENTER
+
+Provide a simple recovery area under Diagnostics or Settings:
+
+```text
+Recovery
+
+Configuration
+✓ Current configuration valid
+✓ Latest backup available
+
+Previous Operation
+⚠ Operation interrupted
+
+[Review Operation]
+[Run Dry Run]
+[Restore Configuration]
+```
+
+Never automatically resume a workspace after a crash.
+
+---
+
+# 47. BACKUP UX
+
+Show:
+
+```text
+Configuration Backups
+
+Today
+• 10:42 — Before import
+• 09:15 — Before migration
+
+Yesterday
+• 16:30 — Manual backup
+```
+
+Actions:
+
+```text
+Create Backup
+Restore
+Export
+Delete Old Backup
+```
+
+Restoration must be validated and confirmed.
+
+Never delete the only valid backup.
+
+---
+
+# 48. IMPORT UX
+
+Use:
+
+```text
+Select file
+↓
+Parse
+↓
+Validate
+↓
+Show changes
+↓
+Confirm
+↓
+Backup current configuration
+↓
+Apply atomically
+↓
+Verify
+```
+
+The preview must clearly distinguish:
+
+```text
+Added
+Changed
+Removed
+Unresolved
+Potentially unsafe
+```
+
+Imported configuration must never execute automatically.
+
+---
+
+# 49. EXPORT UX
+
+Export should support:
+
+- active profile;
+- selected profile;
+- full configuration.
+
+Before exporting, offer:
+
+```text
+Include executable paths
+Include advanced matching rules
+Include environment settings
+```
+
+If exported data could contain sensitive information, warn the user.
+
+---
+
+# 50. PRIVACY-PRESERVING DIAGNOSTICS
+
+Diagnostic reports should have two modes:
+
+### Standard
+
+Safe technical report with redaction.
+
+### Detailed
+
+More technical information, still excluding secrets.
+
+Never include:
+
+- passwords;
+- tokens;
+- browser cookies;
+- authentication headers;
+- private keys;
+- arbitrary secret environment variables.
+
+---
+
+# 51. LOG REDACTION
+
+Implement a centralized redaction layer rather than asking each logger call to remember what is sensitive.
+
+Redact likely secret forms such as:
+
+```text
+token
+password
+apikey
+api_key
+authorization
+secret
+credential
+```
+
+Do not rely only on exact names.
+
+Allow the redaction system to be extended.
+
+---
+
+# 52. PROCESS LAUNCH AUDIT
+
+Before launching an application, log a safe summary:
+
+```text
+Launch requested
+Application: Postman
+Executable: <redacted/full path according to privacy policy>
+Mode: Launch if missing
+Reason: No compatible window detected
+```
+
+Do not log sensitive arguments.
+
+---
+
+# 53. EXECUTION CONCURRENCY MODEL
+
+The application may use worker threads/tasks internally, but **workspace operations are serialized**.
+
+A single operation may perform independent discovery tasks concurrently if that improves performance and is safe.
+
+However:
+
+- only one workspace executor owns Windows-state-changing operations;
+- cancellation must propagate;
+- worker failures must be collected;
+- UI updates must be marshalled safely;
+- workers must terminate cleanly.
+
+---
+
+# 54. RESOURCE LIFECYCLE
+
+All Windows resources must have explicit ownership/lifecycle rules.
+
+Cover:
+
+- process handles;
+- window handles;
+- COM objects;
+- threads;
+- timers;
+- event subscriptions;
+- file handles;
+- log handlers;
+- temporary files.
+
+Ensure cleanup on:
+
+- success;
+- failure;
+- cancellation;
+- application close;
+- unexpected exceptions where possible.
+
+---
+
+# 55. MEMORY AND PERFORMANCE BUDGET
+
+Aim for lightweight idle behavior.
+
+The application should:
+
+- avoid continuous full process enumeration;
+- avoid continuous filesystem scanning;
+- avoid unnecessary desktop polling;
+- avoid duplicate timers;
+- avoid unbounded in-memory logs;
+- avoid retaining every historical window/process object;
+- release resources promptly.
+
+Where practical, use event-driven mechanisms.
+
+If polling is necessary, centralize it and make it configurable.
+
+---
+
+# 56. LARGE WORKSPACE SUPPORT
+
+The application must remain usable with:
+
+- 10+ desktops;
+- 50+ applications;
+- many windows;
+- long executable paths;
+- long workspace names;
+- long application names.
+
+Use:
+
+- virtualization/pagination;
+- search;
+- grouping;
+- collapsible sections;
+- lazy loading where appropriate.
+
+Do not assume a four-desktop/four-application maximum.
+
+---
+
+# 57. INTERNATIONALIZATION READINESS
+
+Version 1 may ship in English, but UI architecture should avoid hard-coding text into business logic.
+
+Keep user-facing strings centralized where practical.
+
+Do not assume:
+
+- text always fits a fixed width;
+- dates use one format;
+- decimal separators are always identical.
+
+Use Windows/user locale-aware formatting where appropriate.
+
+---
+
+# 58. DATE/TIME HANDLING
+
+Store machine-readable timestamps consistently.
+
+Display user-friendly local times.
+
+Operation IDs should remain sortable.
+
+Do not mix ambiguous date formats such as:
+
+```text
+01/02/2026
+```
+
+without context.
+
+Prefer:
+
+```text
+2026-02-01
+```
+
+for logs/data and localized friendly formatting in the UI.
+
+---
+
+# 59. ERROR CODES AND SUPPORTABILITY
+
+Every major failure should have a stable internal error category/code.
+
+Example:
+
+```text
+VDM-001 Provider unavailable
+VDM-002 Desktop identity mismatch
+WIN-001 Window no longer exists
+APP-001 Executable not found
+CFG-001 Invalid configuration
+SETUP-001 Dependency failure
+```
+
+User-facing messages should remain understandable.
+
+Logs should contain the technical code.
+
+---
+
+# 60. SUPPORT BUNDLE
+
+Provide a one-action way to prepare a support bundle containing:
+
+- diagnostic report;
+- relevant logs;
+- configuration schema version;
+- application/provider versions;
+- sanitized operation history.
+
+Do not include secrets or raw private application data.
+
+Prefer an exportable archive such as ZIP if safe and supported.
+
+---
+
+# 61. DOCUMENTATION IMPROVEMENTS
+
+In addition to the existing documentation requirements, create:
+
+```text
+docs/user-guide.md
+docs/ui-ux-specification.md
+docs/operation-state-machine.md
+docs/error-catalog.md
+docs/recovery-guide.md
+docs/support-bundle.md
+docs/test-strategy.md
+docs/release-checklist.md
+docs/compatibility-matrix.md
+```
+
+Keep documentation synchronized with implementation.
+
+---
+
+# 62. COMPATIBILITY MATRIX
+
+Document support by Windows version/build where known:
+
+```text
+Capability                 Win10       Win11
+------------------------------------------------
+Enumerate desktops         Supported   Supported/conditional
+Current desktop            ...
+Window desktop detection   ...
+Window movement            ...
+Desktop creation           ...
+Desktop switching          ...
+```
+
+Do not claim support until technically verified.
+
+Mark:
+
+```text
+Supported
+Conditional
+Unsupported
+Unknown
+```
+
+---
+
+# 63. FEATURE CAPABILITY MATRIX
+
+The UI should derive available actions from detected capabilities.
+
+Example:
+
+```text
+Create Desktop
+✓ Available
+
+Move Window
+✓ Available
+
+Switch Desktop
+⚠ Requires provider capability
+
+Delete Desktop
+✕ Not implemented
+```
+
+Disabled controls must explain why they are unavailable.
+
+Do not simply gray out a control without explanation.
+
+---
+
+# 64. FEATURE FLAGS
+
+If optional/experimental features exist:
+
+- keep them disabled by default;
+- label them clearly;
+- do not expose unstable features as normal production behavior;
+- document them;
+- ensure they cannot bypass safety controls.
+
+---
+
+# 65. ADVANCED MODE
+
+A clearly labeled Advanced/Developer view may expose:
+
+- provider details;
+- GUIDs;
+- HWNDs;
+- PIDs;
+- raw capability data;
+- API errors;
+- execution plan internals.
+
+Do not require Advanced Mode for normal use.
+
+---
+
+# 66. CONFIGURATION SCHEMA DESIGN
+
+Prefer a normalized, versioned model with stable IDs.
+
+Conceptually:
+
+```text
+Application
+ ├─ id
+ ├─ name
+ ├─ executable
+ ├─ arguments
+ ├─ workingDirectory
+ ├─ enabled
+ ├─ desktopId
+ ├─ launchPolicy
+ ├─ matchingPolicy
+ └─ executionPolicy
+
+Workspace
+ ├─ id
+ ├─ name
+ ├─ desktops[]
+ └─ applications[]
+
+Desktop
+ ├─ id
+ ├─ name
+ ├─ windowsDesktopId
+ ├─ displayOrder
+ └─ mappingStatus
+```
+
+Avoid duplicating the same authoritative value in multiple places unless migration/compatibility requires it.
+
+---
+
+# 67. CONFIGURATION VALIDATION LAYERS
+
+Use:
+
+```text
+Syntax validation
+→ Schema validation
+→ Semantic validation
+→ Capability validation
+→ Execution readiness validation
+```
+
+Examples:
+
+A valid path can still be invalid because:
+
+- it points to a directory;
+- it is inaccessible;
+- it is not an executable;
+- its desktop mapping is unresolved.
+
+Do not stop at JSON parsing.
+
+---
+
+# 68. EXECUTION READINESS
+
+Before Run Workspace, display:
+
+```text
+Ready to run
+```
+
+only if all blocking conditions are resolved.
+
+Warnings may be allowed when policy permits.
+
+Example:
+
+```text
+✓ Configuration valid
+✓ Provider available
+✓ Desktop mappings valid
+⚠ Postman unavailable
+```
+
+Then:
+
+```text
+Run with warnings
+```
+
+must be explicit.
+
+---
+
+# 69. DRY-RUN GUARANTEE
+
+Dry Run must be architecturally incapable of invoking Windows-state-changing operations.
+
+Prefer a plan/executor design where Dry Run uses a non-mutating executor rather than merely setting scattered boolean flags.
+
+This is stronger and easier to test.
+
+---
+
+# 70. SAFE EXECUTOR DESIGN
+
+The execution engine should receive an approved execution plan.
+
+It should not invent new actions during execution.
+
+If execution discovers that the world changed:
+
+```text
+Revalidate
+→ Replan or safely skip
+```
+
+Do not silently expand scope.
+
+---
+
+# 71. PLAN IMMUTABILITY
+
+Once a user approves a plan:
+
+- keep a snapshot;
+- record operation ID;
+- execute only approved scope;
+- if material state changes, require re-planning where necessary.
+
+Do not let background discovery silently add new applications to an approved run.
+
+---
+
+# 72. OPERATION SCOPE
+
+Every operation should identify:
+
+```text
+Profile
+Workspace
+Target desktops
+Target applications
+Operation type
+Authorization source
+```
+
+This prevents accidental cross-profile execution.
+
+---
+
+# 73. CROSS-PROFILE SAFETY
+
+Never combine applications from two profiles unless the user explicitly creates a combined workspace.
+
+Running:
+
+```text
+Development
+```
+
+must not accidentally execute:
+
+```text
+Work
+```
+
+or:
+
+```text
+Personal
+```
+
+configuration.
+
+---
+
+# 74. APPLICATION OWNERSHIP
+
+The workspace manager does not own installed applications.
+
+It owns only:
+
+- workspace configuration;
+- application references;
+- its own logs;
+- its own backups;
+- its own shortcuts.
+
+Removing a reference must never imply removal of the application itself.
+
+---
+
+# 75. WINDOWS DESKTOP OWNERSHIP
+
+The manager does not own the user's Virtual Desktops.
+
+It may reference/manage only the desktops explicitly mapped into the active workspace.
+
+Extra desktops remain outside its scope.
+
+---
+
+# 76. USER-INITIATED WINDOW MOVES
+
+If the user manually moves a managed window:
+
+- do not immediately move it back;
+- record the divergence when practical;
+- allow the next explicit Sync to reconcile it;
+- if aggressive automation is enabled, clearly document that behavior.
+
+---
+
+# 77. AUTOMATION MODES
+
+Provide explicit modes:
+
+```text
+Manual
+```
+
+No automatic reconciliation.
+
+```text
+Assisted
+```
+
+Show suggested corrections; require approval.
+
+```text
+Automatic
+```
+
+Allow configured automation subject to safety rules.
+
+Default:
+
+```text
+Manual
+```
+
+Do not make Automatic the default.
+
+---
+
+# 78. AUTOMATION SAFETY
+
+Even Automatic mode must never:
+
+- kill processes;
+- uninstall applications;
+- delete files;
+- delete desktops automatically;
+- execute arbitrary commands;
+- bypass configuration validation;
+- bypass capability checks.
+
+---
+
+# 79. STARTUP AUTOMATION SAFETY
+
+Keep separate:
+
+```text
+Start Manager with Windows
+```
+
+and:
+
+```text
+Run Workspace automatically at login
+```
+
+Both default OFF.
+
+When enabling workspace-at-login, show a stronger warning:
+
+```text
+This will allow the manager to change your desktop/application
+state automatically after Windows login.
+
+You can disable it later in Settings.
+```
+
+---
+
+# 80. SETUP/INSTALLATION UX
+
+When the user explicitly runs setup, show:
+
+```text
+Virtual Desktop Workspace Manager Setup
+
+System
+Windows: ...
+Python: ...
+Architecture: ...
+
+Environment
+✓ Project environment
+✓ Dependencies
+
+Configuration
+✓ Existing configuration preserved
+
+Shortcuts
+✓ Configure
+✓ Run Workspace
+
+No workspace was launched.
+```
+
+Provide a final clear state:
+
+```text
+Setup completed successfully.
+
+The application is ready.
+Nothing was launched.
+```
+
+---
+
+# 81. SETUP MUST NOT BE A HIDDEN RUNTIME
+
+Do not make `setup.py` import and initialize the workspace executor merely to verify it.
+
+Setup may verify imports and static contracts, but must not trigger runtime workspace behavior.
+
+---
+
+# 82. RELEASE/BUILD SEPARATION
+
+Keep these concepts separate:
+
+```text
+Development
+Testing
+Setup
+Packaging
+Runtime
+Workspace Execution
+```
+
+A build step must not automatically become a runtime step.
+
+---
+
+# 83. PACKAGING QUALITY
+
+If packaging is implemented:
+
+- use reproducible build configuration;
+- document build prerequisites;
+- preserve version information;
+- include icons/resources;
+- ensure paths are correct;
+- ensure logs/config remain user-level;
+- ensure the packaged application behaves identically to source mode.
+
+Do not use packaging to hide unsafe behavior.
+
+---
+
+# 84. RELEASE CHECKLIST
+
+Before declaring a release candidate:
+
+```text
+[ ] Requirements traceability complete
+[ ] Static security review complete
+[ ] Mock tests complete
+[ ] Configuration migration tested
+[ ] Setup tested in isolation
+[ ] Packaging reviewed
+[ ] Shortcut targets reviewed
+[ ] Shortcut ownership reviewed
+[ ] UI keyboard navigation reviewed
+[ ] Empty/loading/error states reviewed
+[ ] Logs redacted
+[ ] Diagnostics redacted
+[ ] No unexpected network behavior
+[ ] No startup persistence unless explicitly configured
+[ ] No real workspace manipulated during development
+```
+
+---
+
+# 85. TEST STRATEGY — EXPANDED
+
+Use test layers:
+
+```text
+Unit
+ ↓
+Contract
+ ↓
+Mock integration
+ ↓
+Configuration
+ ↓
+Static security
+ ↓
+Packaging/shortcut validation
+ ↓
+Manual real-Windows validation — only after explicit authorization
+```
+
+Do not skip directly to real Windows testing.
+
+---
+
+# 86. CONTRACT TESTS FOR PROVIDERS
+
+Every Windows-specific provider should have a contract test suite.
+
+Examples:
+
+```text
+enumerate_desktops()
+get_current_desktop()
+get_window_desktop()
+move_window()
+create_desktop()
+switch_desktop()
+```
+
+Mocks must conform to the same contract.
+
+This prevents business logic from becoming dependent on one specific implementation.
+
+---
+
+# 87. FAILURE INJECTION TESTS
+
+Simulate:
+
+- provider unavailable;
+- desktop disappears;
+- window disappears;
+- PID changes;
+- process exits;
+- executable missing;
+- launch timeout;
+- ambiguous window;
+- configuration corruption;
+- backup failure;
+- disk write failure;
+- cancellation during wait;
+- cancellation before launch;
+- partial operation failure;
+- unexpected exception.
+
+The product must fail safely.
+
+---
+
+# 88. FUZZ / ROBUSTNESS TESTING
+
+Where practical, test configuration parsing with:
+
+- missing fields;
+- unknown fields;
+- invalid types;
+- invalid paths;
+- extreme string lengths;
+- malformed regex;
+- negative values;
+- huge values;
+- duplicate IDs;
+- circular/invalid references;
+- invalid Unicode.
+
+Do not allow malformed configuration to crash the manager.
+
+---
+
+# 89. UI TESTING
+
+Test:
+
+- startup;
+- navigation;
+- first-run wizard;
+- add application;
+- edit application;
+- reassign application;
+- multiple applications per desktop;
+- save;
+- unsaved changes;
+- import/export;
+- dry run;
+- execution plan;
+- cancellation;
+- error dialogs;
+- accessibility navigation;
+- resizing;
+- long names;
+- empty states;
+- loading states.
+
+Prefer UI tests with mocked providers.
+
+---
+
+# 90. SECURITY ACCEPTANCE TESTS
+
+Verify:
+
+```text
+No arbitrary shell execution
+No encoded PowerShell
+No dynamic download-and-execute
+No silent elevation
+No hidden startup persistence
+No unsafe config execution
+No secret logging
+No destructive cleanup
+No process killing
+No desktop deletion
+```
+
+---
+
+# 91. PERFORMANCE ACCEPTANCE TESTS
+
+Measure where practical:
+
+- startup time;
+- idle CPU;
+- idle memory;
+- discovery duration;
+- planning duration;
+- execution responsiveness;
+- log viewer performance.
+
+Avoid inventing strict numbers unless measured.
+
+Report observed values honestly.
+
+---
+
+# 92. FAILURE COMMUNICATION
+
+Every failure report should include:
+
+```text
+Status
+What happened
+Scope affected
+What was not changed
+Suggested next action
+Technical details
+Operation ID
+```
+
+This is especially important for Windows API failures.
+
+---
+
+# 93. USER TRUST REQUIREMENT
+
+The product must always make it possible for the user to answer:
+
+> "What is this application about to change?"
+
+and:
+
+> "What did it actually change?"
+
+This should be supported by:
+
+- execution plan;
+- operation history;
+- logs;
+- verification;
+- diagnostics;
+- explicit authorization;
+- clear final report.
+
+---
+
+# 94. FINAL PRODUCT SUCCESS CRITERIA
+
+The product is successful only if all of the following are true:
+
+### Functionality
+
+- [ ] Multiple applications can belong to one workspace desktop.
+- [ ] Applications can be added without source-code changes.
+- [ ] Applications can be reassigned.
+- [ ] Applications can be removed from configuration without uninstalling them.
+- [ ] Profiles work independently.
+- [ ] Desired vs actual state is modeled.
+- [ ] Dry Run is genuinely non-mutating.
+- [ ] Launch and Sync are distinct.
+- [ ] Duplicate launches are prevented.
+- [ ] Window matching is conservative.
+- [ ] Desktop identity is handled safely.
+- [ ] Operations are verified where possible.
+
+### Safety
+
+- [ ] No automatic desktop deletion.
+- [ ] No process termination.
+- [ ] No file deletion.
+- [ ] No application uninstallation.
+- [ ] No hidden shell execution.
+- [ ] No silent elevation.
+- [ ] No hidden startup persistence.
+- [ ] No telemetry.
+- [ ] No runtime network requirement.
+- [ ] No real workspace manipulation during Antigravity development.
+
+### UX
+
+- [ ] Clear navigation.
+- [ ] Clear visual hierarchy.
+- [ ] Responsive resizing.
+- [ ] Keyboard navigation.
+- [ ] Accessible focus states.
+- [ ] Empty states.
+- [ ] Loading states.
+- [ ] Error states.
+- [ ] Success states.
+- [ ] Unsaved-change protection.
+- [ ] Search/filtering where needed.
+- [ ] Consistent terminology.
+- [ ] No fake controls.
+- [ ] No fake success.
+
+### Persistence
+
+- [ ] GUI changes persist.
+- [ ] Run Workspace uses the same saved configuration.
+- [ ] Configuration is versioned.
+- [ ] Writes are atomic.
+- [ ] Backups exist.
+- [ ] Import/export is validated.
+- [ ] Migration is safe.
+
+### Setup
+
+- [ ] Root `setup.py` exists.
+- [ ] Setup is separate from runtime.
+- [ ] Setup is idempotent.
+- [ ] Existing configuration is preserved.
+- [ ] Dependencies are controlled.
+- [ ] Configure shortcut exists.
+- [ ] Run Workspace shortcut exists.
+- [ ] Shortcut ownership is tracked.
+- [ ] Re-running setup does not duplicate shortcuts.
+- [ ] Unrelated shortcuts are preserved.
+- [ ] Setup does not execute the workspace.
+
+### Engineering
+
+- [ ] Windows APIs are isolated behind providers.
+- [ ] Mock providers exist.
+- [ ] Business logic is testable without Windows.
+- [ ] Cancellation is cooperative.
+- [ ] Only one workspace executor runs at once.
+- [ ] Crash recovery is explicit.
+- [ ] Logs are structured.
+- [ ] Diagnostic reports are redacted.
+- [ ] Resource cleanup is implemented.
+- [ ] Documentation matches implementation.
+
+---
+
+# 95. REQUIRED DELIVERABLES — EXPANDED
+
+The finished project must contain, as applicable:
+
+## Source
+
+- complete production-oriented source;
+- clean architecture;
+- provider abstractions;
+- UI;
+- configuration system;
+- workspace engine;
+- planner;
+- executor;
+- verifier;
+- discovery services;
+- diagnostics;
+- logging;
+- setup/bootstrap;
+- packaging support.
+
+## Documentation
+
+At minimum:
+
+```text
+README.md
+CHANGELOG.md
+docs/requirements-analysis.md
+docs/technology-decision.md
+docs/architecture.md
+docs/configuration-schema.md
+docs/windows-api-compatibility.md
+docs/safety-review.md
+docs/security-review.md
+docs/setup-security-review.md
+docs/ui-ux-specification.md
+docs/operation-state-machine.md
+docs/error-catalog.md
+docs/recovery-guide.md
+docs/support-bundle.md
+docs/test-strategy.md
+docs/compatibility-matrix.md
+docs/release-checklist.md
+docs/final-review.md
+docs/requirements-traceability.md
+docs/troubleshooting.md
+```
+
+## Tests
+
+Include:
+
+- unit tests;
+- provider contract tests;
+- mock integration tests;
+- configuration tests;
+- migration tests;
+- setup tests;
+- shortcut tests;
+- security tests;
+- failure-injection tests;
+- UI tests where the selected framework supports them.
+
+## Assets
+
+Include:
+
+- application icon;
+- Configure icon variant if practical;
+- Run Workspace icon variant if practical;
+- any required local UI resources.
+
+---
+
+# 96. FINAL ANTIGRAVITY WORKFLOW
+
+Follow this sequence exactly.
+
+## Phase 1 — Analyze
+
+Read the entire specification.
+
+Identify:
+
+- functional requirements;
+- safety requirements;
+- UX requirements;
+- Windows API dependencies;
+- compatibility risks;
+- setup requirements;
+- testing requirements.
+
+Create:
+
+```text
+docs/requirements-analysis.md
+```
+
+Do not run the application.
+
+## Phase 2 — Technology decision
+
+Create:
+
+```text
+docs/technology-decision.md
+```
+
+Compare realistic Windows technologies.
+
+Choose based on reliability and maintainability.
+
+## Phase 3 — Architecture
+
+Create:
+
+```text
+docs/architecture.md
+docs/operation-state-machine.md
+```
+
+## Phase 4 — UX specification
+
+Create:
+
+```text
+docs/ui-ux-specification.md
+```
+
+Define:
+
+- navigation;
+- page hierarchy;
+- component states;
+- dialogs;
+- empty states;
+- loading states;
+- error states;
+- accessibility;
+- keyboard behavior;
+- responsive behavior.
+
+## Phase 5 — Data model
+
+Create:
+
+```text
+docs/configuration-schema.md
+```
+
+## Phase 6 — Safety review
+
+Create:
+
+```text
+docs/safety-review.md
+docs/security-review.md
+docs/setup-security-review.md
+```
+
+## Phase 7 — Implementation
+
+Build the complete application.
+
+Do not stop at the UI.
+
+Do not create fake controls.
+
+Do not create disconnected screens.
+
+## Phase 8 — Static validation
+
+Inspect the entire source tree.
+
+Search for:
+
+```text
+TODO
+FIXME
+pass
+NotImplemented
+stub
+fake
+placeholder
+coming soon
+shell=True
+EncodedCommand
+Invoke-Expression
+Start-Process
+subprocess
+os.system
+```
+
+Review every potentially dangerous occurrence manually.
+
+## Phase 9 — Safe tests
+
+Use mocks/fakes.
+
+Do not manipulate the real Windows Virtual Desktop environment.
+
+Do not execute `setup.py`.
+
+Do not create real Desktop shortcuts.
+
+Do not launch the generated application.
+
+## Phase 10 — Final review
+
+Create:
+
+```text
+docs/final-review.md
+docs/requirements-traceability.md
+```
+
+For every requirement mark:
+
+```text
+PASS
+PARTIAL
+NOT IMPLEMENTED
+UNSUPPORTED
+```
+
+Do not mark PASS merely because a screen or button exists.
+
+## Phase 11 — Stop
+
+After implementation and safe validation:
+
+**STOP.**
+
+Do not:
+
+- launch the application;
+- execute setup;
+- create real shortcuts;
+- launch configured applications;
+- manipulate Virtual Desktops.
+
+Report the result and wait for explicit authorization.
+
+---
+
+# 97. FINAL RESPONSE REQUIRED FROM ANTIGRAVITY
+
+When the work is complete, report:
+
+1. technology selected;
+2. architecture;
+3. project structure;
+4. files created;
+5. dependencies;
+6. API/provider strategy;
+7. Windows compatibility;
+8. implemented features;
+9. UX improvements;
+10. accessibility features;
+11. persistence model;
+12. setup behavior;
+13. shortcut behavior;
+14. tests created;
+15. tests actually executed;
+16. static validation performed;
+17. security review results;
+18. known limitations;
+19. unsupported Windows features;
+20. packaging instructions;
+21. configuration location;
+22. log location;
+23. diagnostics instructions;
+24. remaining issues;
+25. whether `setup.py` was executed;
+26. whether the application was launched;
+27. whether real Desktop shortcuts were created;
+28. whether real Virtual Desktops were manipulated.
+
+Clearly separate:
+
+```text
+STATIC VALIDATION
+MOCK TESTING
+PACKAGING VALIDATION
+REAL WINDOWS TESTING
+```
+
+If real Windows testing was not authorized, explicitly say:
+
+```text
+Real Windows runtime validation was NOT performed.
+```
+
+Never imply otherwise.
+
+---
+
+# 98. ABSOLUTE FINAL RULES
+
+These rules override convenience.
+
+1. **DO NOT RUN THE GENERATED APPLICATION during development.**
+2. **DO NOT RUN `setup.py` during development.**
+3. **DO NOT CREATE REAL DESKTOP SHORTCUTS during development.**
+4. **DO NOT MANIPULATE REAL VIRTUAL DESKTOPS during development.**
+5. **DO NOT LAUNCH CONFIGURED APPLICATIONS during development.**
+6. **DO NOT DELETE VIRTUAL DESKTOPS automatically.**
+7. **DO NOT KILL PROCESSES.**
+8. **DO NOT UNINSTALL APPLICATIONS.**
+9. **DO NOT DELETE USER FILES.**
+10. **DO NOT MODIFY DEVELOPMENT DATA.**
+11. **DO NOT SILENTLY ELEVATE.**
+12. **DO NOT CREATE HIDDEN STARTUP PERSISTENCE.**
+13. **DO NOT DISABLE WINDOWS SECURITY.**
+14. **DO NOT USE UNSAFE ARBITRARY SHELL COMMANDS.**
+15. **DO NOT EXECUTE CONFIGURATION AS CODE.**
+16. **DO NOT CLAIM SUCCESS WITHOUT VERIFICATION.**
+17. **DO NOT TREAT A PROCESS AS A WINDOW.**
+18. **DO NOT TRUST STALE HWNDs OR PIDs.**
+19. **DO NOT ASSUME DESKTOP POSITION IS PERMANENT IDENTITY.**
+20. **DO NOT SILENTLY EXECUTE AFTER OPENING THE GUI.**
+21. **DO NOT SILENTLY EXECUTE AFTER SAVING CONFIGURATION.**
+22. **DO NOT SILENTLY EXECUTE AFTER IMPORTING A PROFILE.**
+23. **DO NOT SILENTLY EXECUTE AFTER SWITCHING PROFILES.**
+24. **DO NOT LET ONE OPERATION RUN CONCURRENTLY WITH ANOTHER.**
+25. **DO NOT ADD TELEMETRY.**
+26. **DO NOT ADD AN AUTOMATIC UPDATER IN VERSION 1.**
+27. **DO NOT ADD UNRELATED SYSTEM-CLEANING FEATURES.**
+28. **DO NOT USE FAKE DATA IN PRODUCTION UI.**
+29. **DO NOT CREATE BUTTONS THAT DO NOTHING.**
+30. **DO NOT HIDE UNSUPPORTED CAPABILITIES.**
+31. **DO NOT SACRIFICE SAFETY FOR AUTOMATION.**
+32. **DO NOT SACRIFICE RELIABILITY FOR VISUAL EFFECTS.**
+33. **DO NOT SACRIFICE ACCESSIBILITY FOR COMPACTNESS.**
+34. **DO NOT SACRIFICE MAINTAINABILITY FOR SPEED OF INITIAL IMPLEMENTATION.**
+35. **DO NOT CLAIM PRODUCTION-READY STATUS while critical features remain stubbed.**
+36. **DO NOT EXECUTE ANY REAL ACTION UNTIL THE USER EXPLICITLY AUTHORIZES IT.**
+
+---
+
+# 99. IMPLEMENTATION START COMMAND
+
+Begin by analyzing the entire specification and producing the required design/architecture documentation.
+
+Then implement the complete product.
+
+Then perform static validation and safe mocked tests.
+
+Then stop.
+
+**DO NOT RUN THE APPLICATION.**
+
+**DO NOT RUN SETUP.**
+
+**DO NOT CREATE THE REAL DESKTOP SHORTCUTS.**
+
+**DO NOT RUN THE WORKSPACE.**
+
+**WAIT FOR EXPLICIT USER AUTHORIZATION.**
+
+---
+
+# ORIGINAL DETAILED REQUIREMENTS — RETAINED BASELINE
+
+The original detailed specification follows below and remains part of the product contract. The sections above add higher-priority product/UX/quality requirements and clarify behavior where necessary.
+
+
+# RETAINED BASELINE SPECIFICATION
+
+The following original detailed requirements are retained as the implementation baseline.
+
 # BUILD A PRODUCTION-READY WINDOWS 10/11 VIRTUAL DESKTOP WORKSPACE MANAGER
 
 ## 1. ROLE
@@ -6147,3 +9190,259 @@ Then wait.
 **DO NOT RUN THE WORKSPACE.**
 
 **WAIT FOR MY EXPLICIT INSTRUCTION BEFORE EXECUTING ANY REAL WORKSPACE OPERATION.**
+
+
+
+---
+
+# 100. REVISION NOTES FOR THIS VERSION
+
+This revision intentionally strengthens the original specification rather than removing its detailed Windows engineering requirements.
+
+Major improvements include:
+
+- explicit objective, audience, scope, tone, deliverables, and success criteria;
+- product-level UX principles;
+- stronger visual hierarchy;
+- improved Dashboard information architecture;
+- deliberate empty/loading/error/success states;
+- unsaved-change protection;
+- configuration diff/review;
+- application discovery wizard;
+- application detail drawer;
+- desktop mapping UX;
+- keyboard/accessibility requirements;
+- responsive desktop behavior;
+- search/filter/sort requirements;
+- notification/toast behavior;
+- operation history;
+- recovery center;
+- support bundle generation;
+- capability matrices;
+- explicit authorization boundaries;
+- manual/assisted/automatic automation modes;
+- state machines;
+- action classification;
+- plan immutability;
+- operation scope;
+- provider contract testing;
+- failure injection;
+- fuzz/robustness testing;
+- UI testing;
+- performance testing;
+- internationalization readiness;
+- clearer setup/runtime separation;
+- release-readiness criteria;
+- stronger user-trust requirements.
+
+The original detailed sections below remain mandatory unless superseded by an explicit higher-priority safety or clarification rule above.
+
+---
+
+# 101. REQUIREMENT COMPLETENESS RULE
+
+Do not optimize for merely producing a large amount of code.
+
+The goal is a **coherent product** in which:
+
+```text
+UI
+↓
+Domain Model
+↓
+State Discovery
+↓
+Planning
+↓
+Authorization
+↓
+Execution
+↓
+Verification
+↓
+Reporting
+↓
+Persistence
+```
+
+forms one consistent system.
+
+A feature is incomplete if:
+
+- its UI exists but its logic does not;
+- its logic exists but it cannot be configured;
+- it can execute but cannot be tested safely;
+- it changes state without verification;
+- it is not represented in diagnostics/logging;
+- it is not represented in documentation;
+- it violates the safety boundary.
+
+---
+
+# 102. REQUIREMENT QUALITY GATE
+
+Before implementing any feature, classify it as:
+
+```text
+READ-ONLY
+CONFIGURATION
+WINDOWS-STATE-CHANGING
+SETUP
+DIAGNOSTIC
+```
+
+Then determine:
+
+- authorization requirement;
+- rollback/recovery behavior;
+- verification method;
+- logging requirement;
+- mock/test strategy;
+- UI feedback;
+- error behavior.
+
+Do not implement state-changing behavior directly inside UI callbacks without going through the application/domain layer.
+
+---
+
+# 103. PRODUCT COMPLETION DEFINITION
+
+"Complete" means:
+
+```text
+Implemented
++
+Integrated
++
+Persisted
++
+Validated
++
+Tested safely
++
+Documented
++
+Accessible
++
+Recoverable
++
+Traceable
+```
+
+A visual control alone does not constitute implementation.
+
+A function that works only on the developer's machine does not constitute production readiness.
+
+A feature that cannot be safely mocked does not meet the architecture requirement.
+
+---
+
+# 104. UX COMPLETION DEFINITION
+
+The UI is complete only when each major workflow has:
+
+```text
+Entry
+→ Guidance
+→ Action
+→ Progress
+→ Result
+→ Recovery/Next Step
+```
+
+This applies to:
+
+- first run;
+- adding applications;
+- editing workspaces;
+- mapping desktops;
+- importing;
+- restoring;
+- dry run;
+- launch;
+- sync;
+- diagnostics;
+- setup;
+- error recovery.
+
+---
+
+# 105. FINAL USER-TRUST TEST
+
+Before completion, ask:
+
+### Can the user tell what will happen?
+
+If not, improve the plan/confirmation UI.
+
+### Can the user tell what happened?
+
+If not, improve reporting/history/logs.
+
+### Can the user stop future actions?
+
+If not, improve cancellation.
+
+### Can the user recover configuration?
+
+If not, improve backups/recovery.
+
+### Can the user understand why something failed?
+
+If not, improve error UX.
+
+### Can the user use the product without knowing Windows internals?
+
+If not, improve progressive disclosure.
+
+### Can the user verify that a successful action really succeeded?
+
+If not, improve verification.
+
+### Can the user safely configure the product without accidentally executing it?
+
+If not, fix the authorization boundary.
+
+---
+
+# 106. FINAL ANTIGRAVITY STOP CONDITION
+
+Once the project reaches the state below:
+
+```text
+Source complete
+Documentation complete
+Tests created
+Static validation complete
+Mock validation complete
+Security review complete
+Traceability complete
+```
+
+STOP.
+
+Do not continue into:
+
+```text
+setup.py execution
+real installation
+GUI launch
+workspace execution
+Desktop shortcut creation
+Virtual Desktop manipulation
+application launch
+```
+
+unless the user explicitly authorizes the relevant action.
+
+**The correct final state during this development phase is:**
+
+```text
+READY FOR USER AUTHORIZATION
+```
+
+not:
+
+```text
+RUNNING
+```
