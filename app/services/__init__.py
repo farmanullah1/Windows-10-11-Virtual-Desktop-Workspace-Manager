@@ -8,6 +8,7 @@ from app.services.startup_service import StartupService
 from app.services.diagnostics_service import DiagnosticsService
 from app.services.shortcut_service import ShortcutService
 from app.services.single_instance import SingleInstanceGuard
+from app.services.support_bundle import SupportBundleService
 
 __all__ = [
     "ProcessService",
@@ -16,5 +17,6 @@ __all__ = [
     "DiagnosticsService",
     "ShortcutService",
     "SingleInstanceGuard",
+    "SupportBundleService",
 ]
 
