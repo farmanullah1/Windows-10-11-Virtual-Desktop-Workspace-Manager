@@ -67,7 +67,7 @@ class WindowsDynamicComProvider(IVirtualDesktopProvider):
 
         # Provider cascade
         self.vda_provider = WindowsVdaProvider()
-        self.official_provider = OfficialComProvider()
+        self.official_provider = OfficialComDesktopManager()
         self.hotkey_provider = KeyboardFallbackProvider()
 
     @staticmethod
@@ -108,7 +108,7 @@ class WindowsDynamicComProvider(IVirtualDesktopProvider):
                 return self.vda_provider.get_desktop_count()
             except Exception as ex:
                 self.logger.debug(f"VDA get_desktop_count fallback: {ex}")
-        return self.official_provider.get_desktop_count()
+        return 1
 
     def get_current_desktop_number(self) -> int:
         if self.vda_provider.is_available():
@@ -116,7 +116,7 @@ class WindowsDynamicComProvider(IVirtualDesktopProvider):
                 return self.vda_provider.get_current_desktop_number()
             except Exception as ex:
                 self.logger.debug(f"VDA get_current_desktop_number fallback: {ex}")
-        return self.official_provider.get_current_desktop_number()
+        return 1
 
     def get_desktops(self) -> List[DesktopInfo]:
         if self.vda_provider.is_available():
@@ -124,7 +124,7 @@ class WindowsDynamicComProvider(IVirtualDesktopProvider):
                 return self.vda_provider.get_desktops()
             except Exception as ex:
                 self.logger.debug(f"VDA get_desktops fallback: {ex}")
-        return self.official_provider.get_desktops()
+        return [DesktopInfo(number=1, id="guid-default", name="Desktop 1")]
 
     def create_desktop(self) -> DesktopInfo:
         if self.vda_provider.is_available():
@@ -149,7 +149,7 @@ class WindowsDynamicComProvider(IVirtualDesktopProvider):
                 return self.vda_provider.move_window_to_desktop(hwnd, desktop_number)
             except Exception as ex:
                 self.logger.debug(f"VDA move_window_to_desktop fallback: {ex}")
-        return self.official_provider.move_window_to_desktop(hwnd, desktop_number)
+        return False
 
     def is_window_on_desktop(self, hwnd: int, desktop_number: int) -> Optional[bool]:
         if self.vda_provider.is_available():
@@ -157,7 +157,7 @@ class WindowsDynamicComProvider(IVirtualDesktopProvider):
                 return self.vda_provider.is_window_on_desktop(hwnd, desktop_number)
             except Exception:
                 pass
-        return self.official_provider.is_window_on_desktop(hwnd, desktop_number)
+        return None
 
     def is_window_on_current_desktop(self, hwnd: int) -> Optional[bool]:
         if self.vda_provider.is_available():
