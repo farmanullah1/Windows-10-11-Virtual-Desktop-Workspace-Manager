@@ -16,6 +16,7 @@ from app.models.workspace import (
 )
 from app.models.event import EventType, WorkspaceEvent
 from app.models.report import AppExecutionStatus, ExecutionReport
+from app.models.error_codes import ErrorCategory, ErrorDefinition, ERROR_CATALOG, get_error
 
 __all__ = [
     "WindowPolicy",
@@ -32,4 +33,8 @@ __all__ = [
     "WorkspaceEvent",
     "AppExecutionStatus",
     "ExecutionReport",
+    "ErrorCategory",
+    "ErrorDefinition",
+    "ERROR_CATALOG",
+    "get_error",
 ]

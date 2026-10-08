@@ -3,6 +3,7 @@ Logging package exports.
 """
 
 from app.logging.buffer_handler import BufferLogHandler
+from app.logging.redactor import LogRedactor, RedactingFilter, get_global_redactor
 from app.logging.logger import (
     setup_logging,
     get_logger,
@@ -18,4 +19,7 @@ __all__ = [
     "get_default_log_dir",
     "SUCCESS_LEVEL_NUM",
     "BufferLogHandler",
+    "LogRedactor",
+    "RedactingFilter",
+    "get_global_redactor",
 ]

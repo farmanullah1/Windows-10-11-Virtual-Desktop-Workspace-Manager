@@ -12,6 +12,7 @@ import logging
 from pathlib import Path
 from typing import Optional, List
 from .buffer_handler import BufferLogHandler
+from .redactor import RedactingFilter, RedactingFormatter
 
 # Define SUCCESS level between INFO (20) and WARNING (30)
 SUCCESS_LEVEL_NUM = 25
@@ -57,8 +58,11 @@ def setup_logging(
     for h in list(logger.handlers):
         logger.removeHandler(h)
 
-    # Formatter: matches prompt format "YYYY-MM-DD HH:MM:SS [LEVEL] message"
-    formatter = logging.Formatter(
+    # Attach centralized redacting filter
+    logger.addFilter(RedactingFilter())
+
+    # Formatter: matches prompt format "YYYY-MM-DD HH:MM:SS [LEVEL] message" with automatic redaction
+    formatter = RedactingFormatter(
         "%(asctime)s [%(levelname)s] %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S"
     )
