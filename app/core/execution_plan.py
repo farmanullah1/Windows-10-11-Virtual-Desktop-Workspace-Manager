@@ -296,6 +296,19 @@ class WorkspaceExecutionPlan:
                 else:
                     self.logger.info(f"Verification unsupported by active provider for HWND {win.hwnd}.")
                     status.verified = True  # treat as unverified success
+
+                # Window Layout Snapping / Multi-monitor Tiling
+                snap_mode = getattr(app, "window_snap", "default")
+                if snap_mode and snap_mode != "default":
+                    snapped = self.window_provider.snap_window(
+                        win.hwnd,
+                        snap_mode,
+                        getattr(app, "monitor_index", 0),
+                        getattr(app, "custom_rect", None)
+                    )
+                    if snapped:
+                        status.window_snapped = True
+                        self.logger.info(f"Snapped '{win.title}' (HWND {win.hwnd}) mode '{snap_mode}' on Monitor {getattr(app, 'monitor_index', 0)}")
             else:
                 all_moved = False
                 err_move = f"Failed to move HWND {win.hwnd} for '{app.name}' to Desktop {app.desktop}."

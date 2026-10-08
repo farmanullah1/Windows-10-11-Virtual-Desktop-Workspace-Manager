@@ -41,6 +41,9 @@ class ConfigValidator:
         if app.window_timeout_ms < 1000 or app.window_timeout_ms > 120000:
             errors.append(f"Application '{app.name}' window timeout must be between 1,000 and 120,000 ms.")
 
+        if getattr(app, "monitor_index", 0) < 0:
+            errors.append(f"Application '{app.name}' target monitor index must be >= 0.")
+
         # Check executable path if configured
         if app.executable:
             expanded = app.expanded_executable

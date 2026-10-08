@@ -13,6 +13,7 @@ from app.providers.base import (
     DesktopInfo,
     WindowInfo,
     ProcessInfo,
+    MonitorInfo,
 )
 
 
@@ -86,8 +87,17 @@ class MockVirtualDesktopProvider(IVirtualDesktopProvider):
 class MockWindowProvider(IWindowProvider):
     """In-memory mock window discovery provider."""
 
-    def __init__(self, initial_windows: Optional[List[WindowInfo]] = None):
+    def __init__(
+        self,
+        initial_windows: Optional[List[WindowInfo]] = None,
+        initial_monitors: Optional[List[MonitorInfo]] = None
+    ):
         self.windows: List[WindowInfo] = initial_windows or []
+        self.monitors: List[MonitorInfo] = initial_monitors or [
+            MonitorInfo(index=0, x=0, y=0, width=1920, height=1080, is_primary=True),
+            MonitorInfo(index=1, x=1920, y=0, width=1920, height=1080, is_primary=False),
+        ]
+        self.snapped_windows: Dict[int, Dict[str, Any]] = {}
 
     def add_window(self, win: WindowInfo) -> None:
         self.windows.append(win)
@@ -117,6 +127,23 @@ class MockWindowProvider(IWindowProvider):
             if w.hwnd == hwnd:
                 return w
         return None
+
+    def get_monitors(self) -> List[MonitorInfo]:
+        return list(self.monitors)
+
+    def snap_window(
+        self,
+        hwnd: int,
+        snap_mode: str,
+        monitor_index: int = 0,
+        custom_rect: Optional[List[int]] = None
+    ) -> bool:
+        self.snapped_windows[hwnd] = {
+            "snap_mode": snap_mode,
+            "monitor_index": monitor_index,
+            "custom_rect": custom_rect
+        }
+        return True
 
 
 class MockProcessProvider(IProcessProvider):

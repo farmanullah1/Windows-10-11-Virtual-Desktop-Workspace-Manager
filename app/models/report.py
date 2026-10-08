@@ -18,6 +18,7 @@ class AppExecutionStatus:
     was_launched: bool = False
     window_found: bool = False
     window_moved: bool = False
+    window_snapped: bool = False
     verified: bool = False
     error: Optional[str] = None
     warning: Optional[str] = None

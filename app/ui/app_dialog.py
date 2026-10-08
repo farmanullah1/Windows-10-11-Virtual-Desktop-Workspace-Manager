@@ -7,7 +7,7 @@ import os
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 from typing import Optional, List, Callable
-from app.models.workspace import AppConfig, LaunchMode, WindowPolicy, DesktopConfig
+from app.models.workspace import AppConfig, LaunchMode, WindowPolicy, WindowSnap, DesktopConfig
 from app.discovery.app_templates import APPLICATION_TEMPLATES, AppTemplate
 from app.discovery.running_apps import RunningAppDiscoverer, RunningAppInfo
 from app.configuration.validator import ConfigValidator
@@ -138,9 +138,39 @@ class AppDialog(tk.Toplevel):
         self.title_pattern_var = tk.StringVar()
         ttk.Entry(form, textvariable=self.title_pattern_var, width=42).grid(row=8, column=1, sticky=tk.W, pady=4)
 
+        # Target Monitor
+        ttk.Label(form, text="Target Monitor:").grid(row=9, column=0, sticky=tk.W, pady=4)
+        monitor_options = [
+            "Monitor 0 (Primary Display)",
+            "Monitor 1 (Secondary Display)",
+            "Monitor 2",
+            "Monitor 3",
+        ]
+        self.monitor_combo = ttk.Combobox(form, values=monitor_options, state="readonly", width=38)
+        self.monitor_combo.current(0)
+        self.monitor_combo.grid(row=9, column=1, sticky=tk.W, pady=4)
+
+        # Layout / Tiling Snap
+        ttk.Label(form, text="Layout / Tiling:").grid(row=10, column=0, sticky=tk.W, pady=4)
+        snap_options = [
+            ("Default (Preserve Geometry)", WindowSnap.DEFAULT.value),
+            ("Maximize (Fullscreen)", WindowSnap.MAXIMIZE.value),
+            ("Minimize", WindowSnap.MINIMIZE.value),
+            ("Snap Left Half (50%)", WindowSnap.LEFT_HALF.value),
+            ("Snap Right Half (50%)", WindowSnap.RIGHT_HALF.value),
+            ("Snap Top Half (50%)", WindowSnap.TOP_HALF.value),
+            ("Snap Bottom Half (50%)", WindowSnap.BOTTOM_HALF.value),
+            ("Center (75% Size)", WindowSnap.CENTER.value),
+        ]
+        self._snap_map = {opt[0]: opt[1] for opt in snap_options}
+        self._reverse_snap_map = {opt[1]: opt[0] for opt in snap_options}
+        self.snap_combo = ttk.Combobox(form, values=[opt[0] for opt in snap_options], state="readonly", width=38)
+        self.snap_combo.current(0)
+        self.snap_combo.grid(row=10, column=1, sticky=tk.W, pady=4)
+
         # Timings
         timings_frame = ttk.Frame(form)
-        timings_frame.grid(row=9, column=1, sticky=tk.W, pady=6)
+        timings_frame.grid(row=11, column=1, sticky=tk.W, pady=6)
         ttk.Label(timings_frame, text="Launch Delay (ms):").pack(side=tk.LEFT, padx=(0, 4))
         self.delay_var = tk.IntVar(value=1000)
         ttk.Entry(timings_frame, textvariable=self.delay_var, width=6).pack(side=tk.LEFT, padx=(0, 12))
@@ -180,6 +210,15 @@ class AppDialog(tk.Toplevel):
         # Match policy
         policy_label = self._reverse_policy_map.get(self.app.window_policy, "Move main window only")
         self.policy_combo.set(policy_label)
+
+        # Match monitor
+        mon_idx = min(max(0, getattr(self.app, "monitor_index", 0)), 3)
+        self.monitor_combo.current(mon_idx)
+
+        # Match snap
+        snap_val = getattr(self.app, "window_snap", WindowSnap.DEFAULT.value)
+        snap_lbl = self._reverse_snap_map.get(snap_val, "Default (Preserve Geometry)")
+        self.snap_combo.set(snap_lbl)
 
         self._validate_path_live()
 
@@ -292,6 +331,8 @@ class AppDialog(tk.Toplevel):
         self.app.launch_mode = self.launch_mode_var.get()
         self.app.window_policy = policy_key
         self.app.title_pattern = self.title_pattern_var.get().strip()
+        self.app.monitor_index = max(0, self.monitor_combo.current())
+        self.app.window_snap = self._snap_map.get(self.snap_combo.get(), WindowSnap.DEFAULT.value)
         self.app.launch_delay_ms = max(0, self.delay_var.get())
         self.app.window_timeout_ms = max(1000, self.timeout_var.get())
 
