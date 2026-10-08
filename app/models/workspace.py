@@ -127,6 +127,36 @@ class DesktopConfig:
         return asdict(self)
 
 
+class TriggerType(str, Enum):
+    """Supported automatic trigger types."""
+    ON_DISPLAY_CHANGE = "on_display_change"
+    ON_TIME_SCHEDULE = "on_time_schedule"
+    ON_STARTUP = "on_startup"
+
+
+@dataclass
+class ProfileTrigger:
+    """An automatic trigger attached to a workspace profile."""
+    trigger_type: str = TriggerType.ON_DISPLAY_CHANGE.value
+    enabled: bool = True
+    time_of_day: Optional[str] = None  # "HH:MM"
+    cooldown_seconds: int = 60
+    last_triggered: Optional[float] = None
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> ProfileTrigger:
+        return cls(
+            trigger_type=data.get("trigger_type", TriggerType.ON_DISPLAY_CHANGE.value),
+            enabled=data.get("enabled", True),
+            time_of_day=data.get("time_of_day"),
+            cooldown_seconds=data.get("cooldown_seconds", 60),
+            last_triggered=data.get("last_triggered")
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
+
+
 @dataclass
 class WorkspaceProfile:
     """A profile encapsulating desktop setups and application configurations."""
@@ -135,17 +165,21 @@ class WorkspaceProfile:
     description: str = ""
     desktops: List[DesktopConfig] = field(default_factory=list)
     apps: List[AppConfig] = field(default_factory=list)
+    triggers: List[ProfileTrigger] = field(default_factory=list)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> WorkspaceProfile:
         desktops = [DesktopConfig.from_dict(d) for d in data.get("desktops", [])]
         apps = [AppConfig.from_dict(a) for a in data.get("apps", [])]
+        raw_trigs = data.get("triggers", [])
+        triggers = [ProfileTrigger.from_dict(t) for t in raw_trigs]
         return cls(
             id=data.get("id", "default"),
             name=data.get("name", "Default Workspace"),
             description=data.get("description", ""),
             desktops=desktops,
-            apps=apps
+            apps=apps,
+            triggers=triggers
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -154,7 +188,8 @@ class WorkspaceProfile:
             "name": self.name,
             "description": self.description,
             "desktops": [d.to_dict() for d in self.desktops],
-            "apps": [a.to_dict() for a in self.apps]
+            "apps": [a.to_dict() for a in self.apps],
+            "triggers": [t.to_dict() for t in self.triggers]
         }
 
     def get_apps_for_desktop(self, desktop_number: int) -> List[AppConfig]:
