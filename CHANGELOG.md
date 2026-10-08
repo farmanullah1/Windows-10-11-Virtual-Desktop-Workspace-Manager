@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Unsaved Changes Guard**: Prompts user before closing, switching profiles, or discarding unsaved edits (Section 23).
 - **Keyboard Shortcuts**: Native-compliant accelerator keys (`Ctrl+S`, `Ctrl+R`, `F5`, `Ctrl+F`, `Ctrl+L`, `Ctrl+,`, `Esc`) with visible focus (Section 19).
 - **Full Specification Documentation Suite**: Complete documentation covering user guide, UI/UX specification, state machine, error catalog, recovery guide, support bundle, test strategy, compatibility matrix, and release checklist (Section 61).
+- **Expanded Test Suite (94 Automated Tests)**: Provider contract test suite (`test_provider_contracts.py`), failure injection test suite (`test_failure_injection.py`), and fuzz/robustness parsing suite (`test_fuzz_robustness.py`) ensuring 100% test pass rate in isolated environments (Sections 86, 87, 88).
 
 ### Changed
 - Refactored `MainWindow` in `app/ui/app_window.py` to use modular tabbed views with non-color status badges, responsive scaling, and progressive disclosure (Section 5).
